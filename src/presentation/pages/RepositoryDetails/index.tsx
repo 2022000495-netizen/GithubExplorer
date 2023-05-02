@@ -11,14 +11,13 @@ import { GetRepositoryIssues } from '../../../domain/use-cases/GetRepositoryIssu
 import { RepositoryIssue } from '../../../domain/models/RepositoryIssue'
 
 /**
- * API Challenge
- * Next Steps for you
- *  -- Add/Create smaller components when possible.
- *  -- Add unit tests
- *  -- Apply Clean Code to this project.
- * Further Questions?
- * contact me: #
- *
+ *  👋👨‍💻 Hey there! It's time for the API Challenge! 🚀
+ *  Here are some Next Steps for you:
+ *  ✨ Add/Create smaller components when possible.
+ *  🧪 Add unit tests.
+ *  🧹 Apply Clean Code to this project.
+ *  If you have any Further Questions,
+ *  feel free to contact me: # 📩
  */
 
 interface Props {
