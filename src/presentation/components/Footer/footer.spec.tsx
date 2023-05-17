@@ -18,4 +18,12 @@ describe('Footer', () => {
       '#',
     )
   })
+
+  it('should present the repository author name', () => {
+    makeSut()
+
+    const authorName = screen.getByTestId('author')
+
+    expect(authorName).toHaveTextContent('Matheus')
+  })
 })
