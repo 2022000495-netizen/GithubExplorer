@@ -12,7 +12,7 @@ describe('Footer', () => {
 
     const redirectLink = screen.getByRole('link')
 
-    expect(redirectLink).toHaveAttribute(
+    expect(redirectLink).toHaveProperty(
       'href',
       '#',
     )
@@ -23,6 +23,6 @@ describe('Footer', () => {
 
     const authorName = screen.getByTestId('author')
 
-    expect(authorName).toHaveTextContent('Matheus')
+    expect(authorName.textContent).toBe('Matheus')
   })
 })
