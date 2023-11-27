@@ -11,7 +11,7 @@ import { GetRepositoryIssues } from "../../../domain/use-cases/GetRepositoryIssu
 import { RepositoryIssue } from "../../../domain/models/RepositoryIssue";
 
 /**
- *  👋👨‍💻 Hey there! It's time for a coding challenge! 🚀
+ *  👋👨‍💻 Hey there! It's time to make some changes. 🚀
  *  Here are some Next Steps for you:
  *  ✨ Add/Create smaller components when possible.
  *  🧪 Add unit tests.
