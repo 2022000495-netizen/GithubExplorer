@@ -9,6 +9,11 @@ This section explains the powerful concept of [Domain-Driven Design (DDD)](#what
 
 4. **Contact me:** [Matheus](#contact-me). You can reach me at LinkedIn or e-mail. Get in touch to learn more about how DDD can elevate your React project to the next level.
 
+
+
+
+
+
 # Github Explorer + DDD
 
 Welcome to the DDD-powered React project! This project uses Domain-Driven Design (DDD) to help you build powerful and flexible software that solves real-world problems.
