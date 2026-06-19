@@ -1,14 +1,14 @@
 import React from 'react';
-import { Switch, Route } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 
 import Home from '../pages/Home';
 import Repository from '../pages/Repository';
 
-const Routes: React.FC = () => (
-    <Switch>
-        <Route exact path="/" component={Home} ></Route>
-        <Route path="/repositories/:repository+" component={Repository} ></Route>
-    </Switch>
-)
+const AppRoutes: React.FC = () => (
+  <Routes>
+    <Route path="/" element={<Home />} />
+    <Route path="/repositories/*" element={<Repository />} />
+  </Routes>
+);
 
-export default Routes;
+export default AppRoutes;

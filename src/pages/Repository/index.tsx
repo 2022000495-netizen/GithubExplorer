@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useRouteMatch } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 
 import api from '../../services/api';
@@ -9,9 +9,6 @@ import Footer from '../../components/Footer';
 
 import { Header, RespositoryInfo, Issues } from './styles';
 
-interface RepositoryParams {
-  repository: string;
-}
 interface Repository {
   full_name: string;
   description: string;
@@ -33,31 +30,18 @@ interface Issue {
 }
 
 const Repository: React.FC = () => {
-  const { params } = useRouteMatch<RepositoryParams>();
+  const { '*': repositoryName } = useParams();
   const [repository, setRepository] = useState<Repository | null>(null);
   const [issues, setIssues] = useState<Issue[]>([]);
 
   useEffect(() => {
-    api.get(`/repos/${params.repository}`).then((response) => {
+    api.get(`/repos/${repositoryName}`).then((response) => {
       setRepository(response.data);
     });
-    api.get(`/repos/${params.repository}/issues`).then((response) => {
+    api.get(`/repos/${repositoryName}/issues`).then((response) => {
       setIssues(response.data);
     });
-
-    /*
-            Exemplo usando Promisse.all()
-
-            async function loadData(): Promise<void> {
-             const [repository, issues] = await Promise.all([
-                 api.get(`/repos/${params.repository}`),
-                 api.get(`/repos/${params.repository}/issues`)
-             ])
-            }
-
-            loadData();
-        */
-  }, [params.repository]);
+  }, [repositoryName]);
 
   return (
     <>

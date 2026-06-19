@@ -1,7 +1,6 @@
 import React, { useState, FormEvent, useEffect } from 'react';
 import { FiChevronRight } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
-import { uuid } from 'uuidv4';
 
 import api from '../../services/api';
 import logoImage from '../../assets/logo.svg';
@@ -82,7 +81,7 @@ const Home: React.FC = () => {
 
       <Repositories>
         {repositories.map((repository) => (
-          <Link key={`${uuid()}`} to={`/repositories/${repository.full_name}/`}>
+          <Link key={crypto.randomUUID()} to={`/repositories/${repository.full_name}`}>
             <img
               src={repository.owner.avatar_url}
               alt={repository.owner.login}
