@@ -1,7 +1,10 @@
 import { InvalidRepositoryError } from "@/domain/errors/InvalidRepositoryError";
 import { UnexpectedError } from "@/domain/errors/UnexpectedError";
 import { RepositoryIssue } from "@/domain/models/RepositoryIssue";
-import { GetRepositoryIssues } from "@/domain/use-cases/GetRepositoryIssues";
+import {
+  GetRepositoryIssues,
+  REPOSITORY_ISSUES_PER_PAGE,
+} from "@/domain/use-cases/GetRepositoryIssues";
 import {
   HttpClientProtocol,
   HttpStatusCode,
@@ -21,10 +24,14 @@ export class RemoteGetRepositoryIssues implements GetRepositoryIssues {
     private readonly httpClient: HttpClientProtocol
   ) {}
 
-  async get(owner: string, repositoryName: string): Promise<RepositoryIssue[]> {
+  async get(
+    owner: string,
+    repositoryName: string,
+    page = 1
+  ): Promise<RepositoryIssue[]> {
     const httpResult = await this.httpClient.request({
       method: "GET",
-      url: `${this.url}/${owner}/${repositoryName}/issues`,
+      url: `${this.url}/${owner}/${repositoryName}/issues?page=${page}&per_page=${REPOSITORY_ISSUES_PER_PAGE}`,
     });
 
     switch (httpResult.statusCode) {
