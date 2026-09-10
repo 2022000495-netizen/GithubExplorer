@@ -155,3 +155,11 @@ export const Issues = styled.div`
     }
   }
 `;
+
+export const PullRequests = styled(Issues)`
+  h2 {
+    font-size: 24px;
+    color: #3d3d4d;
+    margin-bottom: 16px;
+  }
+`;
