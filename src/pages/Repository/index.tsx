@@ -7,7 +7,7 @@ import api from '../../services/api';
 import logoImage from '../../assets/logo.svg';
 import Footer from '../../components/Footer';
 
-import { Header, RespositoryInfo, Issues } from './styles';
+import { Header, RespositoryInfo, Issues, Tabs, Tab } from './styles';
 
 interface Repository {
   full_name: string;
@@ -29,10 +29,22 @@ interface Issue {
   };
 }
 
+interface PullRequest {
+  id: number;
+  title: string;
+  html_url: string;
+  user: {
+    login: string;
+  };
+  created_at: string;
+}
+
 const Repository: React.FC = () => {
   const { '*': repositoryName } = useParams();
   const [repository, setRepository] = useState<Repository | null>(null);
   const [issues, setIssues] = useState<Issue[]>([]);
+  const [pulls, setPulls] = useState<PullRequest[]>([]);
+  const [activeTab, setActiveTab] = useState<'issues' | 'pulls'>('issues');
 
   useEffect(() => {
     api.get(`/repos/${repositoryName}`).then((response) => {
@@ -40,6 +52,9 @@ const Repository: React.FC = () => {
     });
     api.get(`/repos/${repositoryName}/issues`).then((response) => {
       setIssues(response.data);
+    });
+    api.get(`/repos/${repositoryName}/pulls?state=open`).then((response) => {
+      setPulls(response.data);
     });
   }, [repositoryName]);
 
@@ -80,16 +95,36 @@ const Repository: React.FC = () => {
         <p>Carregando informações.</p>
       )}
 
+      <Tabs>
+        <Tab isActive={activeTab === 'issues'} onClick={() => setActiveTab('issues')}>
+          Issues ({issues.length})
+        </Tab>
+        <Tab isActive={activeTab === 'pulls'} onClick={() => setActiveTab('pulls')}>
+          Pull Requests ({pulls.length})
+        </Tab>
+      </Tabs>
+
       <Issues>
-        {issues.map((issue) => (
-          <a key={issue.id} href={issue.html_url}>
-            <div>
-              <strong>{issue.title}</strong>
-              <p>{issue.user.login}</p>
-            </div>
-            <FiChevronRight size={20} />
-          </a>
-        ))}
+        {activeTab === 'issues' &&
+          issues.map((issue) => (
+            <a key={issue.id} href={issue.html_url}>
+              <div>
+                <strong>{issue.title}</strong>
+                <p>{issue.user.login}</p>
+              </div>
+              <FiChevronRight size={20} />
+            </a>
+          ))}
+        {activeTab === 'pulls' &&
+          pulls.map((pull) => (
+            <a key={pull.id} href={pull.html_url}>
+              <div>
+                <strong>{pull.title}</strong>
+                <p>{pull.user.login}</p>
+              </div>
+              <FiChevronRight size={20} />
+            </a>
+          ))}
       </Issues>
 
       <Footer />
