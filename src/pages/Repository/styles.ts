@@ -114,8 +114,42 @@ export const RespositoryInfo = styled.section`
   }
 `;
 
-export const Issues = styled.div`
+export const TabsContainer = styled.div`
   margin: 80px 0px;
+  max-width: 700px;
+`;
+
+export const TabsButtons = styled.div`
+  display: flex;
+  gap: 0;
+  margin-bottom: 0;
+  border-bottom: 2px solid #e5e7eb;
+
+  button {
+    background: none;
+    border: none;
+    padding: 16px 24px;
+    font-size: 16px;
+    font-weight: 500;
+    color: #a8a8b3;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+
+    &:hover {
+      color: #3d3d4d;
+    }
+
+    &.active {
+      color: #3d3d4d;
+      border-bottom-color: #ff9000;
+    }
+  }
+`;
+
+export const Issues = styled.div`
+  margin: 0;
   max-width: 700px;
   a {
     background: #fff;
