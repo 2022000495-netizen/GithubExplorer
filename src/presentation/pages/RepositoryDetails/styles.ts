@@ -114,9 +114,50 @@ export const RespositoryInfo = styled.section`
   }
 `;
 
-export const Issues = styled.div`
-  margin: 80px 0px;
+export const TabsContainer = styled.div`
+  display: flex;
+  gap: 16px;
+  margin-top: 80px;
+  margin-bottom: 32px;
+  border-bottom: 1px solid #ebeef0;
   max-width: 700px;
+`;
+
+export const TabButton = styled.button<{ active: boolean }>`
+  background: none;
+  border: none;
+  padding: 16px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: ${(props) => (props.active ? "#3d3d4d" : "#a8a8b3")};
+  cursor: pointer;
+  transition: color 0.2s;
+  border-bottom: 3px solid ${(props) => (props.active ? "#0969da" : "transparent")};
+  margin-bottom: -1px;
+
+  &:hover {
+    color: #3d3d4d;
+  }
+
+  & + button {
+    margin-left: 32px;
+  }
+`;
+
+export const TabContent = styled.div`
+  max-width: 700px;
+`;
+
+export const Issues = styled.div`
+  margin: 0px 0px;
+  max-width: 700px;
+
+  p {
+    padding: 24px;
+    color: #a8a8b3;
+    font-size: 16px;
+  }
+
   a {
     background: #fff;
     border-radius: 5px;
@@ -147,6 +188,8 @@ export const Issues = styled.div`
         font-size: 18px;
         color: #a8a8b3;
         margin-top: 4px;
+        margin: 4px 0 0 0;
+        padding: 0;
       }
     }
     svg {
