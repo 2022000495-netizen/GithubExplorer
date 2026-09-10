@@ -4,7 +4,7 @@ import { Link, useParams } from "react-router-dom";
 import logoImage from "@/presentation/assets/logo.svg";
 import Footer from "@/presentation/components/Footer";
 
-import { Header, Issues, RespositoryInfo } from "./styles";
+import { Header, Issues, RespositoryInfo, LoadMoreButton } from "./styles";
 import { GetRepositoryDetails } from "@/domain/use-cases/GetRepositoryDetails";
 import { RepositoryDetails } from "@/domain/models/RepositoryDetails";
 import { GetRepositoryIssues } from "@/domain/use-cases/GetRepositoryIssues";
@@ -35,6 +35,9 @@ const RepositoryDetailsPage: React.FC<Props> = ({
   }>();
   const [repository, setRepository] = useState<RepositoryDetails | null>(null);
   const [issues, setIssues] = useState<RepositoryIssue[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     getRepositoryDetails
@@ -46,15 +49,36 @@ const RepositoryDetailsPage: React.FC<Props> = ({
         setRepository(null);
       });
 
+    loadIssues(1);
+  }, [getRepositoryDetails, getRepositoryIssues, owner, repositoryName]);
+
+  const loadIssues = (page: number) => {
+    setIsLoading(true);
     getRepositoryIssues
-      .get(owner, repositoryName)
-      .then((issues) => {
-        setIssues(issues);
+      .get(owner, repositoryName, page)
+      .then((result) => {
+        if (page === 1) {
+          setIssues(result.issues);
+        } else {
+          setIssues((prevIssues) => [...prevIssues, ...result.issues]);
+        }
+        setHasMore(result.hasMore);
+        setCurrentPage(page);
       })
       .catch(() => {
-        setIssues([]);
+        if (page === 1) {
+          setIssues([]);
+        }
+        setHasMore(false);
+      })
+      .finally(() => {
+        setIsLoading(false);
       });
-  }, [getRepositoryDetails, getRepositoryIssues, owner, repositoryName]);
+  };
+
+  const handleLoadMore = () => {
+    loadIssues(currentPage + 1);
+  };
 
   return (
     <>
@@ -103,6 +127,15 @@ const RepositoryDetailsPage: React.FC<Props> = ({
             <FiChevronRight size={20} />
           </a>
         ))}
+        {hasMore && (
+          <LoadMoreButton
+            onClick={handleLoadMore}
+            disabled={isLoading}
+            type="button"
+          >
+            {isLoading ? "Carregando..." : "Carregar mais"}
+          </LoadMoreButton>
+        )}
       </Issues>
 
       <Footer />

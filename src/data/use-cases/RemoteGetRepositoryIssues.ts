@@ -1,7 +1,7 @@
 import { InvalidRepositoryError } from "@/domain/errors/InvalidRepositoryError";
 import { UnexpectedError } from "@/domain/errors/UnexpectedError";
 import { RepositoryIssue } from "@/domain/models/RepositoryIssue";
-import { GetRepositoryIssues } from "@/domain/use-cases/GetRepositoryIssues";
+import { GetRepositoryIssues, GetRepositoryIssuesResult } from "@/domain/use-cases/GetRepositoryIssues";
 import {
   HttpClientProtocol,
   HttpStatusCode,
@@ -15,21 +15,26 @@ interface RemoteRepositoryIssues {
     login: string;
   };
 }
+
+const ISSUES_PER_PAGE = 6;
+
 export class RemoteGetRepositoryIssues implements GetRepositoryIssues {
   constructor(
     private readonly url: string,
     private readonly httpClient: HttpClientProtocol
   ) {}
 
-  async get(owner: string, repositoryName: string): Promise<RepositoryIssue[]> {
+  async get(owner: string, repositoryName: string, page = 1): Promise<GetRepositoryIssuesResult> {
     const httpResult = await this.httpClient.request({
       method: "GET",
-      url: `${this.url}/${owner}/${repositoryName}/issues`,
+      url: `${this.url}/${owner}/${repositoryName}/issues?page=${page}&per_page=${ISSUES_PER_PAGE}`,
     });
 
     switch (httpResult.statusCode) {
       case HttpStatusCode.ok:
-        return this.adapt(httpResult.body as RemoteRepositoryIssues[]);
+        const issues = this.adapt(httpResult.body as RemoteRepositoryIssues[]);
+        const hasMore = issues.length === ISSUES_PER_PAGE;
+        return { issues, hasMore };
       case HttpStatusCode.notFound:
         throw new InvalidRepositoryError();
       default:
