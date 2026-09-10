@@ -79,22 +79,41 @@ export const Repositories = styled.div`
   margin: 80px 0px;
   max-width: 700px;
 
-  a {
+  > div {
     background: #fff;
     border-radius: 5px;
     width: 100%;
-    padding: 24px;
-    display: block;
-    text-decoration: none;
     display: flex;
     align-items: center;
     transition: transform 0.2s;
     &:hover {
       transform: translateX(10px);
     }
-    & + a {
+    & + div {
       margin-top: 16px;
     }
+
+    > button {
+      background: transparent;
+      border: 0;
+      padding: 24px;
+      display: flex;
+      align-items: center;
+      color: #cbcbd6;
+      transition: color 0.2s;
+
+      &:hover {
+        color: #c53030;
+      }
+    }
+  }
+
+  a {
+    flex: 1;
+    padding: 24px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
 
     img {
       width: 64px;
