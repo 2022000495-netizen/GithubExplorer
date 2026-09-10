@@ -4,6 +4,15 @@ export const Container = styled.div`
   margin: 80px 0px;
   max-width: 700px;
 
+  > div {
+    display: flex;
+    align-items: center;
+
+    & + div {
+      margin-top: 16px;
+    }
+  }
+
   a {
     background: #fff;
     border-radius: 5px;
@@ -16,9 +25,6 @@ export const Container = styled.div`
     transition: transform 0.2s;
     &:hover {
       transform: translateX(10px);
-    }
-    & + a {
-      margin-top: 16px;
     }
 
     img {
@@ -58,6 +64,21 @@ export const Container = styled.div`
       @media (max-width: 350px) {
         display: none;
       }
+    }
+  }
+
+  button {
+    background: #fff;
+    border: none;
+    border-radius: 5px;
+    margin-left: 8px;
+    padding: 24px 16px;
+    cursor: pointer;
+    color: #cbcbd6;
+    transition: color 0.2s;
+
+    &:hover {
+      color: #c53030;
     }
   }
 `
