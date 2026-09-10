@@ -1,14 +1,15 @@
-import { render, screen } from "@testing-library/react";
-import { describe, it, expect } from "vitest";
+import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi } from "vitest";
 import { BrowserRouter } from "react-router-dom";
 import RepositoryList from ".";
 import { Repository } from "@/domain/models/Repository";
 
 type sutParams = {
   repositoriesMock: Repository[];
+  onRemove?: (owner: string, name: string) => void;
 };
-const makeSut = ({ repositoriesMock }: sutParams): void => {
-  render(<RepositoryList repositories={repositoriesMock} />, {
+const makeSut = ({ repositoriesMock, onRemove }: sutParams): void => {
+  render(<RepositoryList repositories={repositoriesMock} onRemove={onRemove} />, {
     wrapper: BrowserRouter,
   });
 };
@@ -44,5 +45,25 @@ describe("RepositoriesList", () => {
       "href",
       `/repositories/owner-2/repository-name-2`
     );
+  });
+
+  it("should call onRemove callback when remove button is clicked", () => {
+    const onRemoveMock = vi.fn();
+    const repositoriesMock: Repository[] = [
+      {
+        description: "repository-description-1",
+        name: "repository-name-1",
+        owner: {
+          avatar: "avatar_url_1",
+          login: "owner-1",
+        },
+      },
+    ];
+    makeSut({ repositoriesMock, onRemove: onRemoveMock });
+    const removeButton = screen.getByRole("button");
+
+    fireEvent.click(removeButton);
+
+    expect(onRemoveMock).toHaveBeenCalledWith("owner-1", "repository-name-1");
   });
 });
