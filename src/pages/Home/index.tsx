@@ -1,5 +1,5 @@
 import React, { useState, FormEvent, useEffect } from 'react';
-import { FiChevronRight } from 'react-icons/fi';
+import { FiChevronRight, FiTrash2 } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
 
 import api from '../../services/api';
@@ -57,6 +57,12 @@ const Home: React.FC = () => {
     }
   }
 
+  function handleRemoveRepository(fullName: string): void {
+    setRepositories(
+      repositories.filter((repository) => repository.full_name !== fullName),
+    );
+  }
+
   useEffect(() => {
     localStorage.setItem(
       '@GihubExplorer:repositories',
@@ -90,6 +96,16 @@ const Home: React.FC = () => {
               <strong>{repository.full_name}</strong>
               <p>{repository.description}</p>
             </div>
+            <button
+              type="button"
+              aria-label={`Remover repositório ${repository.full_name}`}
+              onClick={(e) => {
+                e.preventDefault();
+                handleRemoveRepository(repository.full_name);
+              }}
+            >
+              <FiTrash2 size={20} />
+            </button>
             <FiChevronRight size={20} />
           </Link>
         ))}
