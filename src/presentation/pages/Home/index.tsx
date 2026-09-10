@@ -50,6 +50,16 @@ const Home: React.FC<Props> = ({
     setSearchText(event.target.value);
   }, []);
 
+  const handleRemoveRepository = useCallback((repository: Repository) => {
+    setRepositories((currentRepositories) =>
+      currentRepositories.filter(
+        (currentRepository) =>
+          `${currentRepository.owner.login}/${currentRepository.name}` !==
+          `${repository.owner.login}/${repository.name}`
+      )
+    );
+  }, []);
+
   async function handleSubmit(
     event: FormEvent<HTMLFormElement>
   ): Promise<void> {
@@ -98,7 +108,10 @@ const Home: React.FC<Props> = ({
 
       {formError && <Error>{formError}</Error>}
 
-      <RepositoriesList repositories={repositories} />
+      <RepositoriesList
+        repositories={repositories}
+        onRemoveRepository={handleRemoveRepository}
+      />
 
       <Footer />
     </>

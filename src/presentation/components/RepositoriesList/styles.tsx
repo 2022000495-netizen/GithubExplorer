@@ -1,4 +1,20 @@
 import styled from 'styled-components'
+import { shade } from 'polished'
+
+export const RemoveButton = styled.button`
+  margin-left: auto;
+  background: transparent;
+  border: 0;
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  color: #cbcbd6;
+  transition: color 0.2s;
+
+  &:hover {
+    color: ${shade(0.2, '#c53030')};
+  }
+`
 
 export const Container = styled.div`
   margin: 80px 0px;
@@ -51,8 +67,7 @@ export const Container = styled.div`
         }
       }
     }
-    svg {
-      margin-left: auto;
+    > svg {
       color: #cbcbd6;
 
       @media (max-width: 350px) {
