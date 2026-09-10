@@ -7,7 +7,7 @@ import api from '../../services/api';
 import logoImage from '../../assets/logo.svg';
 import Footer from '../../components/Footer';
 
-import { Header, RespositoryInfo, Issues } from './styles';
+import { Header, RespositoryInfo, Tabs, Issues } from './styles';
 
 interface Repository {
   full_name: string;
@@ -28,11 +28,24 @@ interface Issue {
     login: string;
   };
 }
+interface PullRequest {
+  id: number;
+  title: string;
+  html_url: string;
+  created_at: string;
+  user: {
+    login: string;
+  };
+}
+
+type Tab = 'issues' | 'pullRequests';
 
 const Repository: React.FC = () => {
   const { '*': repositoryName } = useParams();
   const [repository, setRepository] = useState<Repository | null>(null);
   const [issues, setIssues] = useState<Issue[]>([]);
+  const [pullRequests, setPullRequests] = useState<PullRequest[]>([]);
+  const [activeTab, setActiveTab] = useState<Tab>('issues');
 
   useEffect(() => {
     api.get(`/repos/${repositoryName}`).then((response) => {
@@ -40,6 +53,9 @@ const Repository: React.FC = () => {
     });
     api.get(`/repos/${repositoryName}/issues`).then((response) => {
       setIssues(response.data);
+    });
+    api.get(`/repos/${repositoryName}/pulls`, { params: { state: 'open' } }).then((response) => {
+      setPullRequests(response.data);
     });
   }, [repositoryName]);
 
@@ -80,17 +96,50 @@ const Repository: React.FC = () => {
         <p>Carregando informações.</p>
       )}
 
-      <Issues>
-        {issues.map((issue) => (
-          <a key={issue.id} href={issue.html_url}>
-            <div>
-              <strong>{issue.title}</strong>
-              <p>{issue.user.login}</p>
-            </div>
-            <FiChevronRight size={20} />
-          </a>
-        ))}
-      </Issues>
+      <Tabs>
+        <button
+          type="button"
+          className={activeTab === 'issues' ? 'active' : ''}
+          onClick={() => setActiveTab('issues')}
+        >
+          Issues
+        </button>
+        <button
+          type="button"
+          className={activeTab === 'pullRequests' ? 'active' : ''}
+          onClick={() => setActiveTab('pullRequests')}
+        >
+          Pull Requests
+        </button>
+      </Tabs>
+
+      {activeTab === 'issues' ? (
+        <Issues>
+          {issues.map((issue) => (
+            <a key={issue.id} href={issue.html_url}>
+              <div>
+                <strong>{issue.title}</strong>
+                <p>{issue.user.login}</p>
+              </div>
+              <FiChevronRight size={20} />
+            </a>
+          ))}
+        </Issues>
+      ) : (
+        <Issues>
+          {pullRequests.map((pullRequest) => (
+            <a key={pullRequest.id} href={pullRequest.html_url}>
+              <div>
+                <strong>{pullRequest.title}</strong>
+                <p>
+                  {pullRequest.user.login} · {new Date(pullRequest.created_at).toLocaleDateString('pt-BR')}
+                </p>
+              </div>
+              <FiChevronRight size={20} />
+            </a>
+          ))}
+        </Issues>
+      )}
 
       <Footer />
     </>
