@@ -21,10 +21,10 @@ export class RemoteGetRepositoryIssues implements GetRepositoryIssues {
     private readonly httpClient: HttpClientProtocol
   ) {}
 
-  async get(owner: string, repositoryName: string): Promise<RepositoryIssue[]> {
+  async get(owner: string, repositoryName: string, page: number = 1): Promise<RepositoryIssue[]> {
     const httpResult = await this.httpClient.request({
       method: "GET",
-      url: `${this.url}/${owner}/${repositoryName}/issues`,
+      url: `${this.url}/${owner}/${repositoryName}/issues?page=${page}&per_page=30`,
     });
 
     switch (httpResult.statusCode) {

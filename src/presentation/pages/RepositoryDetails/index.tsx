@@ -35,6 +35,9 @@ const RepositoryDetailsPage: React.FC<Props> = ({
   }>();
   const [repository, setRepository] = useState<RepositoryDetails | null>(null);
   const [issues, setIssues] = useState<RepositoryIssue[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
 
   useEffect(() => {
     getRepositoryDetails
@@ -47,14 +50,35 @@ const RepositoryDetailsPage: React.FC<Props> = ({
       });
 
     getRepositoryIssues
-      .get(owner, repositoryName)
+      .get(owner, repositoryName, 1)
       .then((issues) => {
         setIssues(issues);
+        setCurrentPage(1);
+        setHasMore(issues.length > 0);
       })
       .catch(() => {
         setIssues([]);
+        setHasMore(false);
       });
   }, [getRepositoryDetails, getRepositoryIssues, owner, repositoryName]);
+
+  const handleLoadMore = async () => {
+    setIsLoadingMore(true);
+    try {
+      const nextPage = currentPage + 1;
+      const newIssues = await getRepositoryIssues.get(owner, repositoryName, nextPage);
+      if (newIssues.length === 0) {
+        setHasMore(false);
+      } else {
+        setIssues((prev) => [...prev, ...newIssues]);
+        setCurrentPage(nextPage);
+      }
+    } catch {
+      setHasMore(false);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
 
   return (
     <>
@@ -103,6 +127,14 @@ const RepositoryDetailsPage: React.FC<Props> = ({
             <FiChevronRight size={20} />
           </a>
         ))}
+        {hasMore && (
+          <button
+            onClick={handleLoadMore}
+            disabled={isLoadingMore}
+          >
+            {isLoadingMore ? "Carregando..." : "Carregar mais"}
+          </button>
+        )}
       </Issues>
 
       <Footer />
