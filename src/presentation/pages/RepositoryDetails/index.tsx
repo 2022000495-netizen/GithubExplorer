@@ -4,7 +4,7 @@ import { Link, useParams } from "react-router-dom";
 import logoImage from "@/presentation/assets/logo.svg";
 import Footer from "@/presentation/components/Footer";
 
-import { Header, Issues, RespositoryInfo } from "./styles";
+import { Header, Issues, RespositoryInfo, LoadMoreButton } from "./styles";
 import { GetRepositoryDetails } from "@/domain/use-cases/GetRepositoryDetails";
 import { RepositoryDetails } from "@/domain/models/RepositoryDetails";
 import { GetRepositoryIssues } from "@/domain/use-cases/GetRepositoryIssues";
@@ -35,6 +35,9 @@ const RepositoryDetailsPage: React.FC<Props> = ({
   }>();
   const [repository, setRepository] = useState<RepositoryDetails | null>(null);
   const [issues, setIssues] = useState<RepositoryIssue[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMoreIssues, setHasMoreIssues] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   useEffect(() => {
     getRepositoryDetails
@@ -50,11 +53,28 @@ const RepositoryDetailsPage: React.FC<Props> = ({
       .get(owner, repositoryName)
       .then((issues) => {
         setIssues(issues);
+        setCurrentPage(1);
+        setHasMoreIssues(issues.length > 0);
       })
       .catch(() => {
         setIssues([]);
       });
   }, [getRepositoryDetails, getRepositoryIssues, owner, repositoryName]);
+
+  const handleLoadMore = async () => {
+    setIsLoadingMore(true);
+    try {
+      const nextPage = currentPage + 1;
+      const result = await getRepositoryIssues.getPage(owner, repositoryName, nextPage);
+      setIssues((prev) => [...prev, ...result.issues]);
+      setCurrentPage(nextPage);
+      setHasMoreIssues(result.hasMore);
+    } catch {
+      setHasMoreIssues(false);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
 
   return (
     <>
@@ -104,6 +124,15 @@ const RepositoryDetailsPage: React.FC<Props> = ({
           </a>
         ))}
       </Issues>
+
+      {issues.length > 0 && (
+        <LoadMoreButton
+          onClick={handleLoadMore}
+          disabled={!hasMoreIssues || isLoadingMore}
+        >
+          {isLoadingMore ? "Carregando..." : "Carregar mais"}
+        </LoadMoreButton>
+      )}
 
       <Footer />
     </>
