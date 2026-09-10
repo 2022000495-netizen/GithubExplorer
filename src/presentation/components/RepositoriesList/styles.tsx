@@ -14,6 +14,7 @@ export const Container = styled.div`
     display: flex;
     align-items: center;
     transition: transform 0.2s;
+    position: relative;
     &:hover {
       transform: translateX(10px);
     }
@@ -59,5 +60,26 @@ export const Container = styled.div`
         display: none;
       }
     }
+  }
+`
+
+export const DeleteButton = styled.button`
+  background: none;
+  border: none;
+  color: #a8a8b3;
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 8px;
+  transition: color 0.2s;
+
+  &:hover {
+    color: #d32f2f;
+  }
+
+  @media (max-width: 350px) {
+    padding: 4px;
   }
 `

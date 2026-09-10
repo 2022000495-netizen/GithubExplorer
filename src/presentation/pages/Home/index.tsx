@@ -82,6 +82,17 @@ const Home: React.FC<Props> = ({
     saveRepositories.save(repositories);
   }, [repositories, saveRepositories]);
 
+  const handleRemoveRepository = useCallback(
+    (owner: string, name: string) => {
+      setRepositories((prevRepositories) =>
+        prevRepositories.filter(
+          (repo) => !(repo.owner.login === owner && repo.name === name)
+        )
+      );
+    },
+    []
+  );
+
   return (
     <>
       <img src={logoImage} alt="Github Explorer" />
@@ -98,7 +109,10 @@ const Home: React.FC<Props> = ({
 
       {formError && <Error>{formError}</Error>}
 
-      <RepositoriesList repositories={repositories} />
+      <RepositoriesList
+        repositories={repositories}
+        onDelete={handleRemoveRepository}
+      />
 
       <Footer />
     </>
