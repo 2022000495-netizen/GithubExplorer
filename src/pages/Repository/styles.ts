@@ -155,3 +155,27 @@ export const Issues = styled.div`
     }
   }
 `;
+
+export const LoadMoreButton = styled.button`
+  background: #fff;
+  border: 2px solid #ebecf0;
+  border-radius: 5px;
+  width: 100%;
+  padding: 24px;
+  margin-top: 16px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #3d3d4d;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover:not(:disabled) {
+    border-color: #a8a8b3;
+    color: #666;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+`;
