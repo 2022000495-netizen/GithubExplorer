@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { shade } from "polished";
 
 export const Header = styled.header`
   display: flex;
@@ -153,5 +154,27 @@ export const Issues = styled.div`
       margin-left: auto;
       color: #cbcbd6;
     }
+  }
+`;
+
+export const LoadMoreButton = styled.button`
+  width: 100%;
+  margin-top: 16px;
+  padding: 16px 24px;
+  background-color: #04d361;
+  border: 0;
+  border-radius: 5px;
+  color: #fff;
+  font-size: 16px;
+  font-weight: bold;
+  transition: background-color 0.2s;
+
+  &:hover:not(:disabled) {
+    background-color: ${shade(0.2, "#04d361")};
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 `;
