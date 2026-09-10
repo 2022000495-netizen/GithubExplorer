@@ -7,7 +7,7 @@ import api from '../../services/api';
 import logoImage from '../../assets/logo.svg';
 import Footer from '../../components/Footer';
 
-import { Header, RespositoryInfo, Issues } from './styles';
+import { Header, RespositoryInfo, Issues, LoadMoreButton } from './styles';
 
 interface Repository {
   full_name: string;
@@ -29,19 +29,49 @@ interface Issue {
   };
 }
 
+const ISSUES_PER_PAGE = 30;
+
 const Repository: React.FC = () => {
   const { '*': repositoryName } = useParams();
   const [repository, setRepository] = useState<Repository | null>(null);
   const [issues, setIssues] = useState<Issue[]>([]);
+  const [issuesPage, setIssuesPage] = useState(1);
+  const [hasMoreIssues, setHasMoreIssues] = useState(false);
+  const [loadingMoreIssues, setLoadingMoreIssues] = useState(false);
 
   useEffect(() => {
     api.get(`/repos/${repositoryName}`).then((response) => {
       setRepository(response.data);
     });
-    api.get(`/repos/${repositoryName}/issues`).then((response) => {
-      setIssues(response.data);
-    });
+    api
+      .get<Issue[]>(`/repos/${repositoryName}/issues`, {
+        params: { page: 1, per_page: ISSUES_PER_PAGE },
+      })
+      .then((response) => {
+        setIssues(response.data);
+        setIssuesPage(1);
+        setHasMoreIssues(response.data.length === ISSUES_PER_PAGE);
+      });
   }, [repositoryName]);
+
+  async function handleLoadMoreIssues(): Promise<void> {
+    setLoadingMoreIssues(true);
+    try {
+      const nextPage = issuesPage + 1;
+      const response = await api.get<Issue[]>(
+        `/repos/${repositoryName}/issues`,
+        {
+          params: { page: nextPage, per_page: ISSUES_PER_PAGE },
+        },
+      );
+
+      setIssues([...issues, ...response.data]);
+      setIssuesPage(nextPage);
+      setHasMoreIssues(response.data.length === ISSUES_PER_PAGE);
+    } finally {
+      setLoadingMoreIssues(false);
+    }
+  }
 
   return (
     <>
@@ -90,6 +120,16 @@ const Repository: React.FC = () => {
             <FiChevronRight size={20} />
           </a>
         ))}
+
+        {hasMoreIssues && (
+          <LoadMoreButton
+            type="button"
+            onClick={handleLoadMoreIssues}
+            disabled={loadingMoreIssues}
+          >
+            {loadingMoreIssues ? 'Carregando...' : 'Carregar mais'}
+          </LoadMoreButton>
+        )}
       </Issues>
 
       <Footer />
