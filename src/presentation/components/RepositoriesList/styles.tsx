@@ -14,6 +14,7 @@ export const Container = styled.div`
     display: flex;
     align-items: center;
     transition: transform 0.2s;
+    position: relative;
     &:hover {
       transform: translateX(10px);
     }
@@ -59,5 +60,28 @@ export const Container = styled.div`
         display: none;
       }
     }
+  }
+`
+
+export const RemoveButton = styled.button`
+  background: none;
+  border: none;
+  padding: 8px;
+  margin-left: 12px;
+  cursor: pointer;
+  color: #a8a8b3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s;
+
+  &:hover {
+    color: #d65c6c;
+    background: #f0f0f5;
+  }
+
+  @media (max-width: 350px) {
+    display: none;
   }
 `

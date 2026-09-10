@@ -1,14 +1,15 @@
-import { render, screen } from "@testing-library/react";
-import { describe, it, expect } from "vitest";
+import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi } from "vitest";
 import { BrowserRouter } from "react-router-dom";
 import RepositoryList from ".";
 import { Repository } from "@/domain/models/Repository";
 
 type sutParams = {
   repositoriesMock: Repository[];
+  onRemove?: (repository: Repository) => void;
 };
-const makeSut = ({ repositoriesMock }: sutParams): void => {
-  render(<RepositoryList repositories={repositoriesMock} />, {
+const makeSut = ({ repositoriesMock, onRemove }: sutParams): void => {
+  render(<RepositoryList repositories={repositoriesMock} onRemove={onRemove} />, {
     wrapper: BrowserRouter,
   });
 };
@@ -44,5 +45,47 @@ describe("RepositoriesList", () => {
       "href",
       `/repositories/owner-2/repository-name-2`
     );
+  });
+
+  it("should call onRemove callback when remove button is clicked", () => {
+    const repositoryMock: Repository = {
+      description: "repository-description",
+      name: "repository-name",
+      owner: {
+        avatar: "avatar_url",
+        login: "owner",
+      },
+    };
+    const onRemoveMock = vi.fn();
+
+    makeSut({ repositoriesMock: [repositoryMock], onRemove: onRemoveMock });
+
+    const removeButton = screen.getByRole("button", {
+      name: /Remove repository/i,
+    });
+    fireEvent.click(removeButton);
+
+    expect(onRemoveMock).toHaveBeenCalledWith(repositoryMock);
+  });
+
+  it("should not display remove button when onRemove is not provided", () => {
+    const repositoriesMock: Repository[] = [
+      {
+        description: "repository-description",
+        name: "repository-name",
+        owner: {
+          avatar: "avatar_url",
+          login: "owner",
+        },
+      },
+    ];
+
+    makeSut({ repositoriesMock });
+
+    const removeButton = screen.queryByRole("button", {
+      name: /Remove repository/i,
+    });
+
+    expect(removeButton).not.toBeInTheDocument();
   });
 });
