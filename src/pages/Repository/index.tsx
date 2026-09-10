@@ -7,7 +7,7 @@ import api from '../../services/api';
 import logoImage from '../../assets/logo.svg';
 import Footer from '../../components/Footer';
 
-import { Header, RespositoryInfo, Issues } from './styles';
+import { Header, RespositoryInfo, Issues, LoadMoreButton } from './styles';
 
 interface Repository {
   full_name: string;
@@ -29,19 +29,48 @@ interface Issue {
   };
 }
 
+function hasNextPage(linkHeader?: string): boolean {
+  return !!linkHeader && linkHeader.includes('rel="next"');
+}
+
 const Repository: React.FC = () => {
   const { '*': repositoryName } = useParams();
   const [repository, setRepository] = useState<Repository | null>(null);
   const [issues, setIssues] = useState<Issue[]>([]);
+  const [page, setPage] = useState(1);
+  const [hasMoreIssues, setHasMoreIssues] = useState(false);
+  const [loadingMoreIssues, setLoadingMoreIssues] = useState(false);
 
   useEffect(() => {
     api.get(`/repos/${repositoryName}`).then((response) => {
       setRepository(response.data);
     });
-    api.get(`/repos/${repositoryName}/issues`).then((response) => {
-      setIssues(response.data);
-    });
+    api
+      .get(`/repos/${repositoryName}/issues`, { params: { page: 1 } })
+      .then((response) => {
+        setIssues(response.data);
+        setPage(1);
+        setHasMoreIssues(hasNextPage(response.headers.link));
+      });
   }, [repositoryName]);
+
+  async function handleLoadMoreIssues(): Promise<void> {
+    const nextPage = page + 1;
+
+    setLoadingMoreIssues(true);
+
+    try {
+      const response = await api.get(`/repos/${repositoryName}/issues`, {
+        params: { page: nextPage },
+      });
+
+      setIssues([...issues, ...response.data]);
+      setPage(nextPage);
+      setHasMoreIssues(hasNextPage(response.headers.link));
+    } finally {
+      setLoadingMoreIssues(false);
+    }
+  }
 
   return (
     <>
@@ -91,6 +120,16 @@ const Repository: React.FC = () => {
           </a>
         ))}
       </Issues>
+
+      {hasMoreIssues && (
+        <LoadMoreButton
+          type="button"
+          disabled={loadingMoreIssues}
+          onClick={handleLoadMoreIssues}
+        >
+          {loadingMoreIssues ? 'Carregando...' : 'Carregar mais'}
+        </LoadMoreButton>
+      )}
 
       <Footer />
     </>
