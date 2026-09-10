@@ -1,5 +1,5 @@
 import React, { useState, FormEvent, useEffect } from 'react';
-import { FiChevronRight } from 'react-icons/fi';
+import { FiChevronRight, FiTrash2 } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
 
 import api from '../../services/api';
@@ -64,6 +64,12 @@ const Home: React.FC = () => {
     );
   }, [repositories]);
 
+  function handleRemoveRepository(fullName: string): void {
+    setRepositories(
+      repositories.filter((repository) => repository.full_name !== fullName),
+    );
+  }
+
   return (
     <>
       <img src={logoImage} alt="Github Explorer" />
@@ -81,7 +87,7 @@ const Home: React.FC = () => {
 
       <Repositories>
         {repositories.map((repository) => (
-          <Link key={crypto.randomUUID()} to={`/repositories/${repository.full_name}`}>
+          <Link key={repository.full_name} to={`/repositories/${repository.full_name}`}>
             <img
               src={repository.owner.avatar_url}
               alt={repository.owner.login}
@@ -90,6 +96,16 @@ const Home: React.FC = () => {
               <strong>{repository.full_name}</strong>
               <p>{repository.description}</p>
             </div>
+            <button
+              type="button"
+              onClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                handleRemoveRepository(repository.full_name);
+              }}
+            >
+              <FiTrash2 size={20} />
+            </button>
             <FiChevronRight size={20} />
           </Link>
         ))}

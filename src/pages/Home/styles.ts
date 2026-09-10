@@ -126,9 +126,23 @@ export const Repositories = styled.div`
         }
       }
     }
-    svg {
+    button {
+      background: transparent;
+      border: 0;
       margin-left: auto;
+      padding: 8px;
+      line-height: 0;
       color: #cbcbd6;
+      transition: color 0.2s;
+
+      &:hover {
+        color: #c53030;
+      }
+    }
+
+    svg {
+      color: #cbcbd6;
+      margin-left: 8px;
 
       @media (max-width: 350px) {
         display: none;
