@@ -7,7 +7,13 @@ import api from '../../services/api';
 import logoImage from '../../assets/logo.svg';
 import Footer from '../../components/Footer';
 
-import { Header, RespositoryInfo, Issues } from './styles';
+import {
+  Header,
+  RespositoryInfo,
+  SectionTitle,
+  Issues,
+  PullRequests,
+} from './styles';
 
 interface Repository {
   full_name: string;
@@ -28,11 +34,21 @@ interface Issue {
     login: string;
   };
 }
+interface PullRequest {
+  id: number;
+  title: string;
+  html_url: string;
+  created_at: string;
+  user: {
+    login: string;
+  };
+}
 
 const Repository: React.FC = () => {
   const { '*': repositoryName } = useParams();
   const [repository, setRepository] = useState<Repository | null>(null);
   const [issues, setIssues] = useState<Issue[]>([]);
+  const [pullRequests, setPullRequests] = useState<PullRequest[]>([]);
 
   useEffect(() => {
     api.get(`/repos/${repositoryName}`).then((response) => {
@@ -41,6 +57,11 @@ const Repository: React.FC = () => {
     api.get(`/repos/${repositoryName}/issues`).then((response) => {
       setIssues(response.data);
     });
+    api
+      .get(`/repos/${repositoryName}/pulls`, { params: { state: 'open' } })
+      .then((response) => {
+        setPullRequests(response.data);
+      });
   }, [repositoryName]);
 
   return (
@@ -80,6 +101,7 @@ const Repository: React.FC = () => {
         <p>Carregando informações.</p>
       )}
 
+      <SectionTitle>Issues abertas</SectionTitle>
       <Issues>
         {issues.map((issue) => (
           <a key={issue.id} href={issue.html_url}>
@@ -91,6 +113,22 @@ const Repository: React.FC = () => {
           </a>
         ))}
       </Issues>
+
+      <SectionTitle>Pull Requests abertos</SectionTitle>
+      <PullRequests>
+        {pullRequests.map((pullRequest) => (
+          <a key={pullRequest.id} href={pullRequest.html_url}>
+            <div>
+              <strong>{pullRequest.title}</strong>
+              <p>
+                {pullRequest.user.login} · criado em{' '}
+                {new Date(pullRequest.created_at).toLocaleDateString('pt-BR')}
+              </p>
+            </div>
+            <FiChevronRight size={20} />
+          </a>
+        ))}
+      </PullRequests>
 
       <Footer />
     </>
