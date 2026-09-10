@@ -4,10 +4,13 @@ import { Link, useParams } from "react-router-dom";
 import logoImage from "@/presentation/assets/logo.svg";
 import Footer from "@/presentation/components/Footer";
 
-import { Header, Issues, RespositoryInfo } from "./styles";
+import { Header, Issues, LoadMoreButton, RespositoryInfo } from "./styles";
 import { GetRepositoryDetails } from "@/domain/use-cases/GetRepositoryDetails";
 import { RepositoryDetails } from "@/domain/models/RepositoryDetails";
-import { GetRepositoryIssues } from "@/domain/use-cases/GetRepositoryIssues";
+import {
+  GetRepositoryIssues,
+  ISSUES_PER_PAGE,
+} from "@/domain/use-cases/GetRepositoryIssues";
 import { RepositoryIssue } from "@/domain/models/RepositoryIssue";
 
 /**
@@ -35,6 +38,9 @@ const RepositoryDetailsPage: React.FC<Props> = ({
   }>();
   const [repository, setRepository] = useState<RepositoryDetails | null>(null);
   const [issues, setIssues] = useState<RepositoryIssue[]>([]);
+  const [issuesPage, setIssuesPage] = useState(1);
+  const [hasMoreIssues, setHasMoreIssues] = useState(false);
+  const [isLoadingIssues, setIsLoadingIssues] = useState(false);
 
   useEffect(() => {
     getRepositoryDetails
@@ -46,15 +52,39 @@ const RepositoryDetailsPage: React.FC<Props> = ({
         setRepository(null);
       });
 
+    setIssuesPage(1);
     getRepositoryIssues
-      .get(owner, repositoryName)
+      .get(owner, repositoryName, 1)
       .then((issues) => {
         setIssues(issues);
+        setHasMoreIssues(issues.length === ISSUES_PER_PAGE);
       })
       .catch(() => {
         setIssues([]);
+        setHasMoreIssues(false);
       });
   }, [getRepositoryDetails, getRepositoryIssues, owner, repositoryName]);
+
+  async function handleLoadMoreIssues(): Promise<void> {
+    setIsLoadingIssues(true);
+
+    try {
+      const nextPage = issuesPage + 1;
+      const nextIssues = await getRepositoryIssues.get(
+        owner,
+        repositoryName,
+        nextPage
+      );
+
+      setIssues((currentIssues) => [...currentIssues, ...nextIssues]);
+      setIssuesPage(nextPage);
+      setHasMoreIssues(nextIssues.length === ISSUES_PER_PAGE);
+    } catch {
+      setHasMoreIssues(false);
+    } finally {
+      setIsLoadingIssues(false);
+    }
+  }
 
   return (
     <>
@@ -103,6 +133,16 @@ const RepositoryDetailsPage: React.FC<Props> = ({
             <FiChevronRight size={20} />
           </a>
         ))}
+
+        {hasMoreIssues && (
+          <LoadMoreButton
+            type="button"
+            onClick={() => handleLoadMoreIssues()}
+            disabled={isLoadingIssues}
+          >
+            {isLoadingIssues ? "Loading..." : "Load more"}
+          </LoadMoreButton>
+        )}
       </Issues>
 
       <Footer />
