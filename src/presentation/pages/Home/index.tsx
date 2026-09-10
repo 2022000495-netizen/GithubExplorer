@@ -78,6 +78,18 @@ const Home: React.FC<Props> = ({
     }
   }
 
+  const handleRemove = useCallback((repositoryToRemove: Repository) => {
+    setRepositories((prevRepositories) =>
+      prevRepositories.filter(
+        (repo) =>
+          !(
+            repo.name === repositoryToRemove.name &&
+            repo.owner.login === repositoryToRemove.owner.login
+          )
+      )
+    );
+  }, []);
+
   useEffect(() => {
     saveRepositories.save(repositories);
   }, [repositories, saveRepositories]);
@@ -98,7 +110,7 @@ const Home: React.FC<Props> = ({
 
       {formError && <Error>{formError}</Error>}
 
-      <RepositoriesList repositories={repositories} />
+      <RepositoriesList repositories={repositories} onRemove={handleRemove} />
 
       <Footer />
     </>
