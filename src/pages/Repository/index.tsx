@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 
@@ -7,7 +7,7 @@ import api from '../../services/api';
 import logoImage from '../../assets/logo.svg';
 import Footer from '../../components/Footer';
 
-import { Header, RespositoryInfo, Issues } from './styles';
+import { Header, RespositoryInfo, Issues, LoadMoreButton } from './styles';
 
 interface Repository {
   full_name: string;
@@ -29,19 +29,54 @@ interface Issue {
   };
 }
 
+const ISSUES_PER_PAGE = 10;
+
 const Repository: React.FC = () => {
   const { '*': repositoryName } = useParams();
   const [repository, setRepository] = useState<Repository | null>(null);
   const [issues, setIssues] = useState<Issue[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMoreIssues, setHasMoreIssues] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const fetchIssues = useCallback((page: number) => {
+    setIsLoading(true);
+    api
+      .get(`/repos/${repositoryName}/issues`, {
+        params: {
+          page,
+          per_page: ISSUES_PER_PAGE,
+          state: 'open',
+          sort: 'created',
+          direction: 'desc',
+        },
+      })
+      .then((response) => {
+        const newIssues = response.data as Issue[];
+        if (page === 1) {
+          setIssues(newIssues);
+        } else {
+          setIssues((prevIssues) => [...prevIssues, ...newIssues]);
+        }
+        setHasMoreIssues(newIssues.length === ISSUES_PER_PAGE);
+        setIsLoading(false);
+      })
+      .catch(() => {
+        setIsLoading(false);
+      });
+  }, [repositoryName]);
 
   useEffect(() => {
     api.get(`/repos/${repositoryName}`).then((response) => {
       setRepository(response.data);
     });
-    api.get(`/repos/${repositoryName}/issues`).then((response) => {
-      setIssues(response.data);
-    });
-  }, [repositoryName]);
+    fetchIssues(1);
+  }, [repositoryName, fetchIssues]);
+
+  const handleLoadMore = () => {
+    fetchIssues(currentPage + 1);
+    setCurrentPage(currentPage + 1);
+  };
 
   return (
     <>
@@ -91,6 +126,12 @@ const Repository: React.FC = () => {
           </a>
         ))}
       </Issues>
+
+      {hasMoreIssues && (
+        <LoadMoreButton onClick={handleLoadMore} disabled={isLoading}>
+          {isLoading ? 'Carregando...' : 'Carregar mais'}
+        </LoadMoreButton>
+      )}
 
       <Footer />
     </>
