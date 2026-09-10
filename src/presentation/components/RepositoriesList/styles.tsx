@@ -51,7 +51,7 @@ export const Container = styled.div`
         }
       }
     }
-    svg {
+    > svg {
       margin-left: auto;
       color: #cbcbd6;
 
@@ -59,5 +59,24 @@ export const Container = styled.div`
         display: none;
       }
     }
+  }
+`
+
+export const RemoveButton = styled.button`
+  margin-left: auto;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+
+  svg {
+    color: #cbcbd6;
+    transition: color 0.2s;
+  }
+
+  &:hover svg {
+    color: #c53030;
   }
 `
