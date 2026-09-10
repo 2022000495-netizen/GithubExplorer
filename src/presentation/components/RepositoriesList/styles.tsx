@@ -51,8 +51,27 @@ export const Container = styled.div`
         }
       }
     }
-    svg {
+    button {
       margin-left: auto;
+      display: flex;
+      align-items: center;
+      background: transparent;
+      border: 0;
+      padding: 8px;
+      color: #cbcbd6;
+      cursor: pointer;
+      transition: color 0.2s;
+
+      &:hover {
+        color: #c53030;
+      }
+
+      svg {
+        margin-left: 0;
+      }
+    }
+
+    svg {
       color: #cbcbd6;
 
       @media (max-width: 350px) {
