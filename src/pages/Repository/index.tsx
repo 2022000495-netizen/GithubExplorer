@@ -33,14 +33,39 @@ const Repository: React.FC = () => {
   const { '*': repositoryName } = useParams();
   const [repository, setRepository] = useState<Repository | null>(null);
   const [issues, setIssues] = useState<Issue[]>([]);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loading, setLoading] = useState(false);
+
+  const loadIssues = (pageNum: number) => {
+    setLoading(true);
+    api
+      .get(`/repos/${repositoryName}/issues`, {
+        params: { page: pageNum, per_page: 30 },
+      })
+      .then((response) => {
+        if (response.data.length === 0) {
+          setHasMore(false);
+        } else if (response.data.length < 30) {
+          setIssues((prev) => [...prev, ...response.data]);
+          setHasMore(false);
+        } else {
+          setIssues((prev) => [...prev, ...response.data]);
+        }
+        setPage(pageNum);
+        setLoading(false);
+      });
+  };
+
+  const handleLoadMore = () => {
+    loadIssues(page + 1);
+  };
 
   useEffect(() => {
     api.get(`/repos/${repositoryName}`).then((response) => {
       setRepository(response.data);
     });
-    api.get(`/repos/${repositoryName}/issues`).then((response) => {
-      setIssues(response.data);
-    });
+    loadIssues(1);
   }, [repositoryName]);
 
   return (
@@ -90,6 +115,15 @@ const Repository: React.FC = () => {
             <FiChevronRight size={20} />
           </a>
         ))}
+        {hasMore && (
+          <button
+            onClick={handleLoadMore}
+            disabled={loading}
+            className="load-more-btn"
+          >
+            {loading ? 'Carregando...' : 'Carregar mais'}
+          </button>
+        )}
       </Issues>
 
       <Footer />

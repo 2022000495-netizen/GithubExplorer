@@ -154,4 +154,28 @@ export const Issues = styled.div`
       color: #cbcbd6;
     }
   }
+
+  .load-more-btn {
+    background: #04d361;
+    color: #fff;
+    border: 0;
+    border-radius: 5px;
+    width: 100%;
+    padding: 16px 24px;
+    margin-top: 16px;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+
+    &:hover:not(:disabled) {
+      background: #04a043;
+    }
+
+    &:disabled {
+      background: #cbcbd6;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+  }
 `;
