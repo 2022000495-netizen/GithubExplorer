@@ -114,6 +114,11 @@ export const RespositoryInfo = styled.section`
   }
 `;
 
+export const SectionTitle = styled.h2`
+  font-size: 24px;
+  color: #3d3d4d;
+`;
+
 export const Issues = styled.div`
   margin: 80px 0px;
   max-width: 700px;
@@ -154,4 +159,8 @@ export const Issues = styled.div`
       color: #cbcbd6;
     }
   }
+`;
+
+export const PullRequests = styled(Issues)`
+  margin: 24px 0px 80px;
 `;
