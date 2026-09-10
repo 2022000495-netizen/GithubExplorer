@@ -79,6 +79,16 @@ export const Repositories = styled.div`
   margin: 80px 0px;
   max-width: 700px;
 
+  .repository-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    &:not(:first-child) {
+      margin-top: 16px;
+    }
+  }
+
   a {
     background: #fff;
     border-radius: 5px;
@@ -91,9 +101,6 @@ export const Repositories = styled.div`
     transition: transform 0.2s;
     &:hover {
       transform: translateX(10px);
-    }
-    & + a {
-      margin-top: 16px;
     }
 
     img {
@@ -134,6 +141,28 @@ export const Repositories = styled.div`
         display: none;
       }
     }
+  }
+`;
+
+export const RemoveButton = styled.button`
+  background: transparent;
+  border: none;
+  color: #a8a8b3;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 4px;
+  transition: all 0.2s;
+
+  &:hover {
+    color: #c53030;
+    background-color: rgba(197, 48, 48, 0.1);
+  }
+
+  @media (max-width: 350px) {
+    padding: 6px;
   }
 `;
 
