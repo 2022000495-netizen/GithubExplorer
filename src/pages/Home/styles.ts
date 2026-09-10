@@ -134,6 +134,23 @@ export const Repositories = styled.div`
         display: none;
       }
     }
+
+    button {
+      background: transparent;
+      border: 0;
+      margin-right: 16px;
+      display: flex;
+      align-items: center;
+
+      svg {
+        margin-left: 0;
+        transition: color 0.2s;
+      }
+
+      &:hover svg {
+        color: #c53030;
+      }
+    }
   }
 `;
 
