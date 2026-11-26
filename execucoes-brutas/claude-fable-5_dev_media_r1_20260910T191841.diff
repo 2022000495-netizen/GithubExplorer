@@ -1,0 +1,206 @@
+diff --git a/src/data/use-cases/RemoteGetRepositoryIssues.test.ts b/src/data/use-cases/RemoteGetRepositoryIssues.test.ts
+new file mode 100644
+index 0000000..476b649
+--- /dev/null
++++ b/src/data/use-cases/RemoteGetRepositoryIssues.test.ts
+@@ -0,0 +1,79 @@
++import { describe, it, expect, vi } from "vitest";
++import { RemoteGetRepositoryIssues } from "./RemoteGetRepositoryIssues";
++import { ISSUES_PER_PAGE } from "@/domain/use-cases/GetRepositoryIssues";
++import { InvalidRepositoryError } from "@/domain/errors/InvalidRepositoryError";
++import {
++  HttpClientProtocol,
++  HttpResponse,
++  HttpStatusCode,
++} from "../protocols/http/HttpClientProtocol";
++
++const urlMock = "https://api.github.com/repos";
++
++const makeSut = (
++  httpResponse: HttpResponse = { statusCode: HttpStatusCode.ok, body: [] }
++): { sut: RemoteGetRepositoryIssues; httpClientMock: HttpClientProtocol } => {
++  const httpClientMock: HttpClientProtocol = {
++    request: vi.fn().mockResolvedValue(httpResponse),
++  };
++  const sut = new RemoteGetRepositoryIssues(urlMock, httpClientMock);
++
++  return { sut, httpClientMock };
++};
++
++describe("RemoteGetRepositoryIssues", () => {
++  it("should request the first page by default", async () => {
++    const { sut, httpClientMock } = makeSut();
++
++    await sut.get("owner-1", "repository-1");
++
++    expect(httpClientMock.request).toHaveBeenCalledWith({
++      method: "GET",
++      url: `${urlMock}/owner-1/repository-1/issues?page=1&per_page=${ISSUES_PER_PAGE}`,
++    });
++  });
++
++  it("should request the provided page", async () => {
++    const { sut, httpClientMock } = makeSut();
++
++    await sut.get("owner-1", "repository-1", 3);
++
++    expect(httpClientMock.request).toHaveBeenCalledWith({
++      method: "GET",
++      url: `${urlMock}/owner-1/repository-1/issues?page=3&per_page=${ISSUES_PER_PAGE}`,
++    });
++  });
++
++  it("should adapt the returned issues", async () => {
++    const { sut } = makeSut({
++      statusCode: HttpStatusCode.ok,
++      body: [
++        {
++          id: 1,
++          title: "issue-title-1",
++          html_url: "issue-link-1",
++          user: { login: "user-1" },
++        },
++      ],
++    });
++
++    const issues = await sut.get("owner-1", "repository-1");
++
++    expect(issues).toStrictEqual([
++      {
++        id: 1,
++        title: "issue-title-1",
++        createdBy: "user-1",
++        linkTo: "issue-link-1",
++      },
++    ]);
++  });
++
++  it("should throw InvalidRepositoryError when the repository is not found", async () => {
++    const { sut } = makeSut({ statusCode: HttpStatusCode.notFound });
++
++    await expect(sut.get("owner-1", "repository-1")).rejects.toThrow(
++      new InvalidRepositoryError()
++    );
++  });
++});
+diff --git a/src/data/use-cases/RemoteGetRepositoryIssues.ts b/src/data/use-cases/RemoteGetRepositoryIssues.ts
+index 942aa2e..853a086 100644
+--- a/src/data/use-cases/RemoteGetRepositoryIssues.ts
++++ b/src/data/use-cases/RemoteGetRepositoryIssues.ts
+@@ -4 +4,4 @@ import { RepositoryIssue } from "@/domain/models/RepositoryIssue";
+-import { GetRepositoryIssues } from "@/domain/use-cases/GetRepositoryIssues";
++import {
++  GetRepositoryIssues,
++  ISSUES_PER_PAGE,
++} from "@/domain/use-cases/GetRepositoryIssues";
+@@ -24 +27,5 @@ export class RemoteGetRepositoryIssues implements GetRepositoryIssues {
+-  async get(owner: string, repositoryName: string): Promise<RepositoryIssue[]> {
++  async get(
++    owner: string,
++    repositoryName: string,
++    page = 1
++  ): Promise<RepositoryIssue[]> {
+@@ -27 +34 @@ export class RemoteGetRepositoryIssues implements GetRepositoryIssues {
+-      url: `${this.url}/${owner}/${repositoryName}/issues`,
++      url: `${this.url}/${owner}/${repositoryName}/issues?page=${page}&per_page=${ISSUES_PER_PAGE}`,
+diff --git a/src/domain/use-cases/GetRepositoryIssues.ts b/src/domain/use-cases/GetRepositoryIssues.ts
+index 7c16fe5..7d1c90c 100644
+--- a/src/domain/use-cases/GetRepositoryIssues.ts
++++ b/src/domain/use-cases/GetRepositoryIssues.ts
+@@ -2,0 +3,2 @@ import { RepositoryIssue } from '../models/RepositoryIssue'
++export const ISSUES_PER_PAGE = 10
++
+@@ -4 +6,5 @@ export interface GetRepositoryIssues {
+-  get(owner: string, repositoryName: string): Promise<RepositoryIssue[]>
++  get(
++    owner: string,
++    repositoryName: string,
++    page?: number
++  ): Promise<RepositoryIssue[]>
+diff --git a/src/presentation/pages/RepositoryDetails/index.tsx b/src/presentation/pages/RepositoryDetails/index.tsx
+index 0fb2c3d..594646c 100644
+--- a/src/presentation/pages/RepositoryDetails/index.tsx
++++ b/src/presentation/pages/RepositoryDetails/index.tsx
+@@ -7 +7 @@ import Footer from "@/presentation/components/Footer";
+-import { Header, Issues, RespositoryInfo } from "./styles";
++import { Header, Issues, LoadMoreButton, RespositoryInfo } from "./styles";
+@@ -10 +10,4 @@ import { RepositoryDetails } from "@/domain/models/RepositoryDetails";
+-import { GetRepositoryIssues } from "@/domain/use-cases/GetRepositoryIssues";
++import {
++  GetRepositoryIssues,
++  ISSUES_PER_PAGE,
++} from "@/domain/use-cases/GetRepositoryIssues";
+@@ -37,0 +41,3 @@ const RepositoryDetailsPage: React.FC<Props> = ({
++  const [issuesPage, setIssuesPage] = useState(1);
++  const [hasMoreIssues, setHasMoreIssues] = useState(false);
++  const [isLoadingIssues, setIsLoadingIssues] = useState(false);
+@@ -48,0 +55 @@ const RepositoryDetailsPage: React.FC<Props> = ({
++    setIssuesPage(1);
+@@ -50 +57 @@ const RepositoryDetailsPage: React.FC<Props> = ({
+-      .get(owner, repositoryName)
++      .get(owner, repositoryName, 1)
+@@ -52,0 +60 @@ const RepositoryDetailsPage: React.FC<Props> = ({
++        setHasMoreIssues(issues.length === ISSUES_PER_PAGE);
+@@ -55,0 +64 @@ const RepositoryDetailsPage: React.FC<Props> = ({
++        setHasMoreIssues(false);
+@@ -58,0 +68,21 @@ const RepositoryDetailsPage: React.FC<Props> = ({
++  async function handleLoadMoreIssues(): Promise<void> {
++    setIsLoadingIssues(true);
++
++    try {
++      const nextPage = issuesPage + 1;
++      const nextIssues = await getRepositoryIssues.get(
++        owner,
++        repositoryName,
++        nextPage
++      );
++
++      setIssues((currentIssues) => [...currentIssues, ...nextIssues]);
++      setIssuesPage(nextPage);
++      setHasMoreIssues(nextIssues.length === ISSUES_PER_PAGE);
++    } catch {
++      setHasMoreIssues(false);
++    } finally {
++      setIsLoadingIssues(false);
++    }
++  }
++
+@@ -105,0 +136,10 @@ const RepositoryDetailsPage: React.FC<Props> = ({
++
++        {hasMoreIssues && (
++          <LoadMoreButton
++            type="button"
++            onClick={() => handleLoadMoreIssues()}
++            disabled={isLoadingIssues}
++          >
++            {isLoadingIssues ? "Loading..." : "Load more"}
++          </LoadMoreButton>
++        )}
+diff --git a/src/presentation/pages/RepositoryDetails/styles.ts b/src/presentation/pages/RepositoryDetails/styles.ts
+index 89d0a99..855c950 100644
+--- a/src/presentation/pages/RepositoryDetails/styles.ts
++++ b/src/presentation/pages/RepositoryDetails/styles.ts
+@@ -1,0 +2 @@ import styled from "styled-components";
++import { shade } from "polished";
+@@ -157,0 +159,21 @@ export const Issues = styled.div`
++
++export const LoadMoreButton = styled.button`
++  margin-top: 24px;
++  width: 100%;
++  height: 56px;
++  background-color: #04d361;
++  border: 0px;
++  border-radius: 5px;
++  color: #fff;
++  font-weight: bold;
++  transition: background-color 0.2s;
++
++  &:hover:not(:disabled) {
++    background-color: ${shade(0.2, "#04d361")};
++  }
++
++  &:disabled {
++    opacity: 0.6;
++    cursor: not-allowed;
++  }
++`;

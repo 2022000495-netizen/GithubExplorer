@@ -1,0 +1,146 @@
+diff --git a/src/pages/Home/index.tsx b/src/pages/Home/index.tsx
+index b21a9d6..caabfb8 100644
+--- a/src/pages/Home/index.tsx
++++ b/src/pages/Home/index.tsx
+@@ -2 +2 @@ import React, { useState, FormEvent, useEffect } from 'react';
+-import { FiChevronRight } from 'react-icons/fi';
++import { FiChevronRight, FiTrash2 } from 'react-icons/fi';
+@@ -59,0 +60,6 @@ const Home: React.FC = () => {
++  function handleRemoveRepository(fullName: string): void {
++    setRepositories(
++      repositories.filter((repository) => repository.full_name !== fullName),
++    );
++  }
++
+@@ -84,11 +90,20 @@ const Home: React.FC = () => {
+-          <Link key={crypto.randomUUID()} to={`/repositories/${repository.full_name}`}>
+-            <img
+-              src={repository.owner.avatar_url}
+-              alt={repository.owner.login}
+-            />
+-            <div>
+-              <strong>{repository.full_name}</strong>
+-              <p>{repository.description}</p>
+-            </div>
+-            <FiChevronRight size={20} />
+-          </Link>
++          <li key={repository.full_name}>
++            <Link to={`/repositories/${repository.full_name}`}>
++              <img
++                src={repository.owner.avatar_url}
++                alt={repository.owner.login}
++              />
++              <div>
++                <strong>{repository.full_name}</strong>
++                <p>{repository.description}</p>
++              </div>
++              <FiChevronRight size={20} />
++            </Link>
++            <button
++              type="button"
++              onClick={() => handleRemoveRepository(repository.full_name)}
++              aria-label="Remover repositório"
++            >
++              <FiTrash2 size={20} />
++            </button>
++          </li>
+diff --git a/src/pages/Home/styles.ts b/src/pages/Home/styles.ts
+index c9492f6..6dafe43 100644
+--- a/src/pages/Home/styles.ts
++++ b/src/pages/Home/styles.ts
+@@ -78 +78 @@ export const Form = styled.form<FormProps>`
+-export const Repositories = styled.div`
++export const Repositories = styled.ul`
+@@ -80,0 +81 @@ export const Repositories = styled.div`
++  list-style: none;
+@@ -82 +83 @@ export const Repositories = styled.div`
+-  a {
++  li {
+@@ -87,2 +87,0 @@ export const Repositories = styled.div`
+-    display: block;
+-    text-decoration: none;
+@@ -95 +94 @@ export const Repositories = styled.div`
+-    & + a {
++    & + li {
+@@ -99,6 +98,14 @@ export const Repositories = styled.div`
+-    img {
+-      width: 64px;
+-      height: 64px;
+-      border-radius: 50%;
+-      @media (max-width: 460px) {
+-        display: none;
++    a {
++      flex: 1;
++      display: flex;
++      align-items: center;
++      text-decoration: none;
++      min-width: 0;
++
++      img {
++        width: 64px;
++        height: 64px;
++        border-radius: 50%;
++        @media (max-width: 460px) {
++          display: none;
++        }
+@@ -106 +112,0 @@ export const Repositories = styled.div`
+-    }
+@@ -108,3 +114,3 @@ export const Repositories = styled.div`
+-    div {
+-      margin: 0px 16px;
+-      flex: 1;
++      div {
++        margin: 0px 16px;
++        flex: 1;
+@@ -112,8 +118,16 @@ export const Repositories = styled.div`
+-      strong {
+-        font-size: 20px;
+-        color: #3d3d4d;
+-      }
+-      p {
+-        font-size: 18px;
+-        color: #a8a8b3;
+-        margin-top: 4px;
++        strong {
++          font-size: 20px;
++          color: #3d3d4d;
++        }
++        p {
++          font-size: 18px;
++          color: #a8a8b3;
++          margin-top: 4px;
++        }
++
++        @media (max-width: 600px) {
++          strong,
++          p {
++            font-size: 16px;
++          }
++        }
+@@ -120,0 +135,3 @@ export const Repositories = styled.div`
++      svg {
++        margin-left: auto;
++        color: #cbcbd6;
+@@ -122,4 +139,2 @@ export const Repositories = styled.div`
+-      @media (max-width: 600px) {
+-        strong,
+-        p {
+-          font-size: 16px;
++        @media (max-width: 350px) {
++          display: none;
+@@ -129,2 +144,6 @@ export const Repositories = styled.div`
+-    svg {
+-      margin-left: auto;
++
++    button {
++      background: transparent;
++      border: 0;
++      margin-left: 16px;
++      padding: 4px;
+@@ -131,0 +151 @@ export const Repositories = styled.div`
++      transition: color 0.2s;
+@@ -133,2 +153,2 @@ export const Repositories = styled.div`
+-      @media (max-width: 350px) {
+-        display: none;
++      &:hover {
++        color: #c53030;

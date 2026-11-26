@@ -1,0 +1,309 @@
+diff --git a/package.json b/package.json
+index 65f0af0..0a2a8ea 100644
+--- a/package.json
++++ b/package.json
+@@ -15,0 +16 @@
++    "playwright": "^1.63.0",
+diff --git a/src/pages/Home/index.tsx b/src/pages/Home/index.tsx
+index b21a9d6..0deaa4f 100644
+--- a/src/pages/Home/index.tsx
++++ b/src/pages/Home/index.tsx
+@@ -2 +2 @@ import React, { useState, FormEvent, useEffect } from 'react';
+-import { FiChevronRight } from 'react-icons/fi';
++import { FiChevronRight, FiTrash2 } from 'react-icons/fi';
+@@ -9 +9 @@ import Footer from '../../components/Footer';
+-import { Title, Form, Repositories, Error } from './styles';
++import { Title, Form, Repositories, Error, RemoveButton } from './styles';
+@@ -59,0 +60,4 @@ const Home: React.FC = () => {
++  function handleRemoveRepository(fullName: string): void {
++    setRepositories(repositories.filter((repo) => repo.full_name !== fullName));
++  }
++
+@@ -84,11 +88,23 @@ const Home: React.FC = () => {
+-          <Link key={crypto.randomUUID()} to={`/repositories/${repository.full_name}`}>
+-            <img
+-              src={repository.owner.avatar_url}
+-              alt={repository.owner.login}
+-            />
+-            <div>
+-              <strong>{repository.full_name}</strong>
+-              <p>{repository.description}</p>
+-            </div>
+-            <FiChevronRight size={20} />
+-          </Link>
++          <div key={crypto.randomUUID()} className="repository-item">
++            <Link to={`/repositories/${repository.full_name}`}>
++              <img
++                src={repository.owner.avatar_url}
++                alt={repository.owner.login}
++              />
++              <div>
++                <strong>{repository.full_name}</strong>
++                <p>{repository.description}</p>
++              </div>
++              <FiChevronRight size={20} />
++            </Link>
++            <RemoveButton
++              onClick={(e) => {
++                e.preventDefault();
++                handleRemoveRepository(repository.full_name);
++              }}
++              title="Remover repositório"
++              aria-label={`Remover ${repository.full_name}`}
++            >
++              <FiTrash2 size={20} />
++            </RemoveButton>
++          </div>
+diff --git a/src/pages/Home/styles.ts b/src/pages/Home/styles.ts
+index c9492f6..1b7c36d 100644
+--- a/src/pages/Home/styles.ts
++++ b/src/pages/Home/styles.ts
+@@ -82,7 +82 @@ export const Repositories = styled.div`
+-  a {
+-    background: #fff;
+-    border-radius: 5px;
+-    width: 100%;
+-    padding: 24px;
+-    display: block;
+-    text-decoration: none;
++  .repository-item {
+@@ -91 +85,4 @@ export const Repositories = styled.div`
+-    transition: transform 0.2s;
++    background: #fff;
++    border-radius: 5px;
++    transition: box-shadow 0.2s;
++
+@@ -93,4 +90 @@ export const Repositories = styled.div`
+-      transform: translateX(10px);
+-    }
+-    & + a {
+-      margin-top: 16px;
++      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+@@ -99,7 +93,2 @@ export const Repositories = styled.div`
+-    img {
+-      width: 64px;
+-      height: 64px;
+-      border-radius: 50%;
+-      @media (max-width: 460px) {
+-        display: none;
+-      }
++    & + .repository-item {
++      margin-top: 16px;
+@@ -108,2 +97,9 @@ export const Repositories = styled.div`
+-    div {
+-      margin: 0px 16px;
++    a {
++      background: transparent;
++      border-radius: 0;
++      width: 100%;
++      padding: 24px;
++      display: flex;
++      align-items: center;
++      text-decoration: none;
++      transition: transform 0.2s;
+@@ -112,3 +108,2 @@ export const Repositories = styled.div`
+-      strong {
+-        font-size: 20px;
+-        color: #3d3d4d;
++      &:hover {
++        transform: translateX(10px);
+@@ -116,4 +111,9 @@ export const Repositories = styled.div`
+-      p {
+-        font-size: 18px;
+-        color: #a8a8b3;
+-        margin-top: 4px;
++
++      img {
++        width: 64px;
++        height: 64px;
++        border-radius: 50%;
++        flex-shrink: 0;
++        @media (max-width: 460px) {
++          display: none;
++        }
+@@ -122,2 +122,8 @@ export const Repositories = styled.div`
+-      @media (max-width: 600px) {
+-        strong,
++      div {
++        margin: 0px 16px;
++        flex: 1;
++
++        strong {
++          font-size: 20px;
++          color: #3d3d4d;
++        }
+@@ -125 +131,10 @@ export const Repositories = styled.div`
+-          font-size: 16px;
++          font-size: 18px;
++          color: #a8a8b3;
++          margin-top: 4px;
++        }
++
++        @media (max-width: 600px) {
++          strong,
++          p {
++            font-size: 16px;
++          }
+@@ -128,4 +142,0 @@ export const Repositories = styled.div`
+-    }
+-    svg {
+-      margin-left: auto;
+-      color: #cbcbd6;
+@@ -133,2 +144,8 @@ export const Repositories = styled.div`
+-      @media (max-width: 350px) {
+-        display: none;
++      svg {
++        margin-left: auto;
++        color: #cbcbd6;
++        flex-shrink: 0;
++
++        @media (max-width: 350px) {
++          display: none;
++        }
+@@ -144,0 +162,26 @@ export const Error = styled.span`
++
++export const RemoveButton = styled.button`
++  background: transparent;
++  border: none;
++  padding: 12px 16px;
++  color: #a8a8b3;
++  cursor: pointer;
++  display: flex;
++  align-items: center;
++  justify-content: center;
++  transition: color 0.2s, transform 0.2s;
++  flex-shrink: 0;
++
++  &:hover {
++    color: #c53030;
++    transform: scale(1.1);
++  }
++
++  &:active {
++    transform: scale(0.95);
++  }
++
++  @media (max-width: 350px) {
++    padding: 8px 12px;
++  }
++`;
+diff --git a/test-remove-repo.js b/test-remove-repo.js
+new file mode 100644
+index 0000000..d874f25
+--- /dev/null
++++ b/test-remove-repo.js
+@@ -0,0 +1,114 @@
++import { chromium } from 'playwright';
++
++async function testRemoveRepository() {
++  const browser = await chromium.launch();
++  const page = await browser.newPage();
++
++  try {
++    console.log('🧪 Iniciando testes de remoção de repositórios...\n');
++
++    // Navegar até a página
++    console.log('📱 Navegando até http://localhost:5173/...');
++    await page.goto('http://localhost:5173/', { waitUntil: 'networkidle' });
++    console.log('✅ Página carregada\n');
++
++    // Pré-popular localStorage com um repositório de teste
++    console.log('📝 Pré-populando localStorage com repositório de teste...');
++    await page.evaluate(() => {
++      const testRepo = [
++        {
++          full_name: 'facebook/react',
++          description: 'A JavaScript library for building user interfaces',
++          owner: {
++            login: 'facebook',
++            avatar_url: 'https://avatars.githubusercontent.com/u/69631?v=4'
++          }
++        }
++      ];
++      localStorage.setItem('@GihubExplorer:repositories', JSON.stringify(testRepo));
++    });
++    console.log('✅ Repositório adicionado ao localStorage\n');
++
++    // Recarregar a página para carregar o repositório
++    console.log('🔄 Recarregando página...');
++    await page.reload({ waitUntil: 'networkidle' });
++    console.log('✅ Página recarregada\n');
++
++    // Aguardar o elemento do repositório aparecer
++    console.log('⏳ Aguardando repositório aparecer...');
++    await page.waitForSelector('.repository-item', { timeout: 5000 });
++    console.log('✅ Repositório apareceu\n');
++
++    // Verificar se o botão de remover existe
++    console.log('🔍 Verificando se o botão de remover existe...');
++    const removeButton = await page.$('button[title="Remover repositório"]');
++    if (removeButton) {
++      console.log('✅ Botão de remover encontrado\n');
++    } else {
++      console.log('❌ Botão de remover NÃO encontrado\n');
++      throw new Error('Botão de remover não encontrado');
++    }
++
++    // Tirar screenshot antes de remover
++    console.log('📸 Capturando screenshot ANTES de remover...');
++    await page.screenshot({ path: '/tmp/before-remove.png' });
++    console.log('✅ Screenshot salvo em /tmp/before-remove.png\n');
++
++    // Contar repositórios antes
++    const itemsBefore = await page.$$eval('.repository-item', items => items.length);
++    console.log(`📊 Repositórios na lista ANTES: ${itemsBefore}`);
++
++    // Clicar no botão de remover
++    console.log('🗑️  Clicando no botão de remover...');
++    await removeButton.click();
++    console.log('✅ Botão clicado\n');
++
++    // Aguardar o repositório desaparecer
++    console.log('⏳ Aguardando repositório desaparecer...');
++    await page.waitForSelector('.repository-item', { state: 'hidden', timeout: 5000 }).catch(() => {});
++    const itemsAfter = await page.$$eval('.repository-item', items => items.length).catch(() => 0);
++    console.log(`📊 Repositórios na lista DEPOIS: ${itemsAfter}\n`);
++
++    // Tirar screenshot depois de remover
++    console.log('📸 Capturando screenshot DEPOIS de remover...');
++    await page.screenshot({ path: '/tmp/after-remove.png' });
++    console.log('✅ Screenshot salvo em /tmp/after-remove.png\n');
++
++    // Verificar localStorage
++    console.log('💾 Verificando localStorage...');
++    const storedRepos = await page.evaluate(() => {
++      const repos = localStorage.getItem('@GihubExplorer:repositories');
++      return repos ? JSON.parse(repos) : [];
++    });
++    console.log(`📊 Repositórios no localStorage: ${storedRepos.length}\n`);
++
++    // Recarregar página para verificar persistência
++    console.log('🔄 Recarregando página para verificar persistência...');
++    await page.reload({ waitUntil: 'networkidle' });
++
++    const itemsAfterReload = await page.$$eval('.repository-item', items => items.length).catch(() => 0);
++    console.log(`📊 Repositórios após reload: ${itemsAfterReload}\n`);
++
++    // Tirar screenshot final
++    console.log('📸 Capturando screenshot FINAL...');
++    await page.screenshot({ path: '/tmp/after-reload.png' });
++    console.log('✅ Screenshot salvo em /tmp/after-reload.png\n');
++
++    // Resultado final
++    if (itemsBefore > itemsAfter && itemsAfter === 0) {
++      console.log('✅ TESTE PASSOU! Repositório foi removido com sucesso e a remoção foi persistida.\n');
++    } else {
++      console.log('❌ TESTE FALHOU!');
++      console.log(`   Antes: ${itemsBefore}, Depois: ${itemsAfter}, Após reload: ${itemsAfterReload}\n`);
++      throw new Error('Remoção não funcionou corretamente');
++    }
++
++  } catch (error) {
++    console.error('❌ Erro durante o teste:', error.message);
++    process.exit(1);
++  } finally {
++    await browser.close();
++  }
++}
++
++testRemoveRepository();

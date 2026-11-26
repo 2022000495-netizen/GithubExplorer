@@ -1,0 +1,117 @@
+diff --git a/src/data/use-cases/RemoteGetRepositoryIssues.ts b/src/data/use-cases/RemoteGetRepositoryIssues.ts
+index 942aa2e..3cb2aef 100644
+--- a/src/data/use-cases/RemoteGetRepositoryIssues.ts
++++ b/src/data/use-cases/RemoteGetRepositoryIssues.ts
+@@ -4 +4,4 @@ import { RepositoryIssue } from "@/domain/models/RepositoryIssue";
+-import { GetRepositoryIssues } from "@/domain/use-cases/GetRepositoryIssues";
++import {
++  GetRepositoryIssues,
++  REPOSITORY_ISSUES_PER_PAGE,
++} from "@/domain/use-cases/GetRepositoryIssues";
+@@ -24 +27,5 @@ export class RemoteGetRepositoryIssues implements GetRepositoryIssues {
+-  async get(owner: string, repositoryName: string): Promise<RepositoryIssue[]> {
++  async get(
++    owner: string,
++    repositoryName: string,
++    page = 1
++  ): Promise<RepositoryIssue[]> {
+@@ -27 +34 @@ export class RemoteGetRepositoryIssues implements GetRepositoryIssues {
+-      url: `${this.url}/${owner}/${repositoryName}/issues`,
++      url: `${this.url}/${owner}/${repositoryName}/issues?page=${page}&per_page=${REPOSITORY_ISSUES_PER_PAGE}`,
+diff --git a/src/domain/use-cases/GetRepositoryIssues.ts b/src/domain/use-cases/GetRepositoryIssues.ts
+index 7c16fe5..9e110eb 100644
+--- a/src/domain/use-cases/GetRepositoryIssues.ts
++++ b/src/domain/use-cases/GetRepositoryIssues.ts
+@@ -2,0 +3,2 @@ import { RepositoryIssue } from '../models/RepositoryIssue'
++export const REPOSITORY_ISSUES_PER_PAGE = 20
++
+@@ -4 +6 @@ export interface GetRepositoryIssues {
+-  get(owner: string, repositoryName: string): Promise<RepositoryIssue[]>
++  get(owner: string, repositoryName: string, page?: number): Promise<RepositoryIssue[]>
+diff --git a/src/presentation/pages/RepositoryDetails/index.tsx b/src/presentation/pages/RepositoryDetails/index.tsx
+index 0fb2c3d..1e6bd71 100644
+--- a/src/presentation/pages/RepositoryDetails/index.tsx
++++ b/src/presentation/pages/RepositoryDetails/index.tsx
+@@ -1 +1 @@
+-import React, { useEffect, useState } from "react";
++import React, { useCallback, useEffect, useState } from "react";
+@@ -7 +7 @@ import Footer from "@/presentation/components/Footer";
+-import { Header, Issues, RespositoryInfo } from "./styles";
++import { Header, Issues, LoadMoreButton, RespositoryInfo } from "./styles";
+@@ -10 +10,4 @@ import { RepositoryDetails } from "@/domain/models/RepositoryDetails";
+-import { GetRepositoryIssues } from "@/domain/use-cases/GetRepositoryIssues";
++import {
++  GetRepositoryIssues,
++  REPOSITORY_ISSUES_PER_PAGE,
++} from "@/domain/use-cases/GetRepositoryIssues";
+@@ -37,0 +41,3 @@ const RepositoryDetailsPage: React.FC<Props> = ({
++  const [issuesPage, setIssuesPage] = useState(1);
++  const [hasMoreIssues, setHasMoreIssues] = useState(true);
++  const [isLoadingMoreIssues, setIsLoadingMoreIssues] = useState(false);
+@@ -52,0 +59,2 @@ const RepositoryDetailsPage: React.FC<Props> = ({
++        setIssuesPage(1);
++        setHasMoreIssues(issues.length === REPOSITORY_ISSUES_PER_PAGE);
+@@ -55,0 +64 @@ const RepositoryDetailsPage: React.FC<Props> = ({
++        setHasMoreIssues(false);
+@@ -58,0 +68,21 @@ const RepositoryDetailsPage: React.FC<Props> = ({
++  const handleLoadMoreIssues = useCallback(async () => {
++    const nextPage = issuesPage + 1;
++
++    setIsLoadingMoreIssues(true);
++    try {
++      const newIssues = await getRepositoryIssues.get(
++        owner,
++        repositoryName,
++        nextPage
++      );
++
++      setIssues((previousIssues) => [...previousIssues, ...newIssues]);
++      setIssuesPage(nextPage);
++      setHasMoreIssues(newIssues.length === REPOSITORY_ISSUES_PER_PAGE);
++    } catch {
++      setHasMoreIssues(false);
++    } finally {
++      setIsLoadingMoreIssues(false);
++    }
++  }, [getRepositoryIssues, issuesPage, owner, repositoryName]);
++
+@@ -107,0 +138,10 @@ const RepositoryDetailsPage: React.FC<Props> = ({
++      {hasMoreIssues && (
++        <LoadMoreButton
++          type="button"
++          disabled={isLoadingMoreIssues}
++          onClick={handleLoadMoreIssues}
++        >
++          {isLoadingMoreIssues ? "Loading..." : "Load more"}
++        </LoadMoreButton>
++      )}
++
+diff --git a/src/presentation/pages/RepositoryDetails/styles.ts b/src/presentation/pages/RepositoryDetails/styles.ts
+index 89d0a99..6969ef7 100644
+--- a/src/presentation/pages/RepositoryDetails/styles.ts
++++ b/src/presentation/pages/RepositoryDetails/styles.ts
+@@ -0,0 +1 @@
++import { shade } from "polished";
+@@ -157,0 +159,22 @@ export const Issues = styled.div`
++
++export const LoadMoreButton = styled.button`
++  display: block;
++  margin: 0 auto;
++  width: 210px;
++  height: 56px;
++  background-color: #04d361;
++  border: 0px;
++  border-radius: 5px;
++  color: #fff;
++  font-weight: bold;
++  transition: background-color 0.2s;
++
++  &:hover:not(:disabled) {
++    background-color: ${shade(0.2, "#04d361")};
++  }
++
++  &:disabled {
++    background-color: #a8a8b3;
++    cursor: not-allowed;
++  }
++`;

@@ -1,0 +1,307 @@
+diff --git a/package.json b/package.json
+index 206431d..b56ab89 100644
+--- a/package.json
++++ b/package.json
+@@ -41,0 +42 @@
++    "playwright": "^1.63.0",
+diff --git a/src/presentation/components/RepositoriesList/index.tsx b/src/presentation/components/RepositoriesList/index.tsx
+index b9fbdae..919ac35 100644
+--- a/src/presentation/components/RepositoriesList/index.tsx
++++ b/src/presentation/components/RepositoriesList/index.tsx
+@@ -2 +2 @@ import React from "react";
+-import { FiChevronRight } from "react-icons/fi";
++import { FiChevronRight, FiX } from "react-icons/fi";
+@@ -5 +5 @@ import { Repository } from "@/domain/models/Repository";
+-import { Container } from "./styles";
++import { Container, RemoveButton } from "./styles";
+@@ -8,0 +9 @@ interface Props {
++  onRemove?: (repositoryName: string) => void;
+@@ -10 +11,9 @@ interface Props {
+-const RepositoriesList: React.FC<Props> = ({ repositories }: Props) => {
++const RepositoriesList: React.FC<Props> = ({ repositories, onRemove }: Props) => {
++  const handleRemoveClick = (
++    e: React.MouseEvent<HTMLButtonElement>,
++    repositoryName: string
++  ) => {
++    e.preventDefault();
++    onRemove?.(repositoryName);
++  };
++
+@@ -14,8 +23,19 @@ const RepositoriesList: React.FC<Props> = ({ repositories }: Props) => {
+-        <Link key={`${name}`} to={`/repositories/${owner.login}/${name}`}>
+-          <img src={owner.avatar} alt={owner.login} />
+-          <div>
+-            <strong>{name}</strong>
+-            <p>{description}</p>
+-          </div>
+-          <FiChevronRight size={20} />
+-        </Link>
++        <div key={`${name}`} className="repository-item">
++          <Link to={`/repositories/${owner.login}/${name}`}>
++            <img src={owner.avatar} alt={owner.login} />
++            <div>
++              <strong>{name}</strong>
++              <p>{description}</p>
++            </div>
++            <FiChevronRight size={20} />
++          </Link>
++          {onRemove && (
++            <RemoveButton
++              onClick={(e) => handleRemoveClick(e, name)}
++              title="Remove repository"
++              aria-label={`Remove ${name}`}
++            >
++              <FiX size={20} />
++            </RemoveButton>
++          )}
++        </div>
+diff --git a/src/presentation/components/RepositoriesList/repositories-list.test.tsx b/src/presentation/components/RepositoriesList/repositories-list.test.tsx
+index a22560c..c79085e 100644
+--- a/src/presentation/components/RepositoriesList/repositories-list.test.tsx
++++ b/src/presentation/components/RepositoriesList/repositories-list.test.tsx
+@@ -1,2 +1,2 @@
+-import { render, screen } from "@testing-library/react";
+-import { describe, it, expect } from "vitest";
++import { render, screen, fireEvent } from "@testing-library/react";
++import { describe, it, expect, vi } from "vitest";
+@@ -8,0 +9 @@ type sutParams = {
++  onRemove?: (repositoryName: string) => void;
+@@ -10,4 +11,7 @@ type sutParams = {
+-const makeSut = ({ repositoriesMock }: sutParams): void => {
+-  render(<RepositoryList repositories={repositoriesMock} />, {
+-    wrapper: BrowserRouter,
+-  });
++const makeSut = ({ repositoriesMock, onRemove }: sutParams): void => {
++  render(
++    <RepositoryList repositories={repositoriesMock} onRemove={onRemove} />,
++    {
++      wrapper: BrowserRouter,
++    }
++  );
+@@ -29 +33 @@ describe("RepositoriesList", () => {
+-        name: "repository-name-2",
++        name: "repository-description-2",
+@@ -37 +41 @@ describe("RepositoriesList", () => {
+-    const [firstRepository, secondRepository] = screen.getAllByRole("link");
++    const links = screen.getAllByRole("link");
+@@ -39 +43 @@ describe("RepositoriesList", () => {
+-    expect(firstRepository).toHaveAttribute(
++    expect(links[0]).toHaveAttribute(
+@@ -43 +47 @@ describe("RepositoriesList", () => {
+-    expect(secondRepository).toHaveAttribute(
++    expect(links[1]).toHaveAttribute(
+@@ -45 +49 @@ describe("RepositoriesList", () => {
+-      `/repositories/owner-2/repository-name-2`
++      `/repositories/owner-2/repository-description-2`
+@@ -47,0 +52,55 @@ describe("RepositoriesList", () => {
++
++  it("should render remove button when onRemove callback is provided", () => {
++    const repositoriesMock: Repository[] = [
++      {
++        description: "repository-description-1",
++        name: "repository-name-1",
++        owner: {
++          avatar: "avatar_url_1",
++          login: "owner-1",
++        },
++      },
++    ];
++    const mockOnRemove = vi.fn();
++    makeSut({ repositoriesMock, onRemove: mockOnRemove });
++
++    const removeButtons = screen.getAllByRole("button");
++    expect(removeButtons.length).toBeGreaterThan(0);
++  });
++
++  it("should call onRemove callback with repository name when remove button is clicked", () => {
++    const repositoriesMock: Repository[] = [
++      {
++        description: "repository-description-1",
++        name: "repository-name-1",
++        owner: {
++          avatar: "avatar_url_1",
++          login: "owner-1",
++        },
++      },
++    ];
++    const mockOnRemove = vi.fn();
++    makeSut({ repositoriesMock, onRemove: mockOnRemove });
++
++    const removeButton = screen.getByLabelText("Remove repository-name-1");
++    fireEvent.click(removeButton);
++
++    expect(mockOnRemove).toHaveBeenCalledWith("repository-name-1");
++  });
++
++  it("should not render remove button when onRemove callback is not provided", () => {
++    const repositoriesMock: Repository[] = [
++      {
++        description: "repository-description-1",
++        name: "repository-name-1",
++        owner: {
++          avatar: "avatar_url_1",
++          login: "owner-1",
++        },
++      },
++    ];
++    makeSut({ repositoriesMock });
++
++    const removeButtons = screen.queryAllByRole("button");
++    expect(removeButtons.length).toBe(0);
++  });
+diff --git a/src/presentation/components/RepositoriesList/styles.tsx b/src/presentation/components/RepositoriesList/styles.tsx
+index 89e5da7..b1b7c6c 100644
+--- a/src/presentation/components/RepositoriesList/styles.tsx
++++ b/src/presentation/components/RepositoriesList/styles.tsx
+@@ -7,7 +7 @@ export const Container = styled.div`
+-  a {
+-    background: #fff;
+-    border-radius: 5px;
+-    width: 100%;
+-    padding: 24px;
+-    display: block;
+-    text-decoration: none;
++  .repository-item {
+@@ -16,7 +10,3 @@ export const Container = styled.div`
+-    transition: transform 0.2s;
+-    &:hover {
+-      transform: translateX(10px);
+-    }
+-    & + a {
+-      margin-top: 16px;
+-    }
++    background: #fff;
++    border-radius: 5px;
++    padding: 0;
+@@ -24,7 +14,2 @@ export const Container = styled.div`
+-    img {
+-      width: 64px;
+-      height: 64px;
+-      border-radius: 50%;
+-      @media (max-width: 460px) {
+-        display: none;
+-      }
++    & + .repository-item {
++      margin-top: 16px;
+@@ -33,2 +18,9 @@ export const Container = styled.div`
+-    div {
+-      margin: 0px 16px;
++    a {
++      background: transparent;
++      border-radius: 0;
++      width: 100%;
++      padding: 24px;
++      display: flex;
++      align-items: center;
++      text-decoration: none;
++      transition: transform 0.2s;
+@@ -37,3 +29,2 @@ export const Container = styled.div`
+-      strong {
+-        font-size: 20px;
+-        color: #3d3d4d;
++      &:hover {
++        transform: translateX(10px);
+@@ -41,4 +32,9 @@ export const Container = styled.div`
+-      p {
+-        font-size: 18px;
+-        color: #a8a8b3;
+-        margin-top: 4px;
++
++      img {
++        width: 64px;
++        height: 64px;
++        border-radius: 50%;
++        flex-shrink: 0;
++        @media (max-width: 460px) {
++          display: none;
++        }
+@@ -47,2 +43,8 @@ export const Container = styled.div`
+-      @media (max-width: 600px) {
+-        strong,
++      div {
++        margin: 0px 16px;
++        flex: 1;
++
++        strong {
++          font-size: 20px;
++          color: #3d3d4d;
++        }
+@@ -50 +52,10 @@ export const Container = styled.div`
+-          font-size: 16px;
++          font-size: 18px;
++          color: #a8a8b3;
++          margin-top: 4px;
++        }
++
++        @media (max-width: 600px) {
++          strong,
++          p {
++            font-size: 16px;
++          }
+@@ -53,4 +64,4 @@ export const Container = styled.div`
+-    }
+-    svg {
+-      margin-left: auto;
+-      color: #cbcbd6;
++      svg {
++        margin-left: auto;
++        color: #cbcbd6;
++        flex-shrink: 0;
+@@ -58,2 +69,3 @@ export const Container = styled.div`
+-      @media (max-width: 350px) {
+-        display: none;
++        @media (max-width: 350px) {
++          display: none;
++        }
+@@ -63,0 +76,31 @@ export const Container = styled.div`
++
++export const RemoveButton = styled.button`
++  background: transparent;
++  border: none;
++  cursor: pointer;
++  padding: 8px 16px;
++  display: flex;
++  align-items: center;
++  justify-content: center;
++  color: #cbcbd6;
++  transition: color 0.2s, transform 0.2s;
++  flex-shrink: 0;
++
++  &:hover {
++    color: #f85652;
++    transform: scale(1.2);
++  }
++
++  &:active {
++    transform: scale(0.95);
++  }
++
++  svg {
++    width: 20px;
++    height: 20px;
++  }
++
++  @media (max-width: 350px) {
++    padding: 8px 12px;
++  }
++`
+diff --git a/src/presentation/pages/Home/index.tsx b/src/presentation/pages/Home/index.tsx
+index bb224a4..a9ea83d 100644
+--- a/src/presentation/pages/Home/index.tsx
++++ b/src/presentation/pages/Home/index.tsx
+@@ -80,0 +81,9 @@ const Home: React.FC<Props> = ({
++  const handleRemoveRepository = useCallback(
++    (repositoryName: string) => {
++      setRepositories((prevRepositories) =>
++        prevRepositories.filter((repo) => repo.name !== repositoryName)
++      );
++    },
++    []
++  );
++
+@@ -101 +110,4 @@ const Home: React.FC<Props> = ({
+-      <RepositoriesList repositories={repositories} />
++      <RepositoriesList
++        repositories={repositories}
++        onRemove={handleRemoveRepository}
++      />

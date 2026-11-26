@@ -1,0 +1,63 @@
+diff --git a/src/pages/Repository/index.tsx b/src/pages/Repository/index.tsx
+index 6ec6f43..1d19f4c 100644
+--- a/src/pages/Repository/index.tsx
++++ b/src/pages/Repository/index.tsx
+@@ -10 +10,7 @@ import Footer from '../../components/Footer';
+-import { Header, RespositoryInfo, Issues } from './styles';
++import {
++  Header,
++  RespositoryInfo,
++  Issues,
++  PullRequests,
++  SectionTitle,
++} from './styles';
+@@ -30,0 +37,9 @@ interface Issue {
++interface PullRequest {
++  id: number;
++  title: string;
++  html_url: string;
++  created_at: string;
++  user: {
++    login: string;
++  };
++}
+@@ -35,0 +51 @@ const Repository: React.FC = () => {
++  const [pullRequests, setPullRequests] = useState<PullRequest[]>([]);
+@@ -43,0 +60,5 @@ const Repository: React.FC = () => {
++    api
++      .get(`/repos/${repositoryName}/pulls`, { params: { state: 'open' } })
++      .then((response) => {
++        setPullRequests(response.data);
++      });
+@@ -83,0 +105 @@ const Repository: React.FC = () => {
++        <SectionTitle>Issues</SectionTitle>
+@@ -94,0 +117,16 @@ const Repository: React.FC = () => {
++      <PullRequests>
++        <SectionTitle>Pull Requests abertos</SectionTitle>
++        {pullRequests.map((pullRequest) => (
++          <a key={pullRequest.id} href={pullRequest.html_url}>
++            <div>
++              <strong>{pullRequest.title}</strong>
++              <p>
++                {pullRequest.user.login} · criado em{' '}
++                {new Date(pullRequest.created_at).toLocaleDateString('pt-BR')}
++              </p>
++            </div>
++            <FiChevronRight size={20} />
++          </a>
++        ))}
++      </PullRequests>
++
+diff --git a/src/pages/Repository/styles.ts b/src/pages/Repository/styles.ts
+index 6a82d80..fd62c89 100644
+--- a/src/pages/Repository/styles.ts
++++ b/src/pages/Repository/styles.ts
+@@ -157,0 +158,8 @@ export const Issues = styled.div`
++
++export const PullRequests = styled(Issues)``;
++
++export const SectionTitle = styled.h2`
++  font-size: 24px;
++  color: #3d3d4d;
++  margin-bottom: 16px;
++`;

@@ -1,0 +1,51 @@
+diff --git a/src/pages/Home/index.tsx b/src/pages/Home/index.tsx
+index b21a9d6..178ca36 100644
+--- a/src/pages/Home/index.tsx
++++ b/src/pages/Home/index.tsx
+@@ -2 +2 @@ import React, { useState, FormEvent, useEffect } from 'react';
+-import { FiChevronRight } from 'react-icons/fi';
++import { FiChevronRight, FiTrash2 } from 'react-icons/fi';
+@@ -66,0 +67,6 @@ const Home: React.FC = () => {
++  function handleRemoveRepository(fullName: string): void {
++    setRepositories(
++      repositories.filter((repository) => repository.full_name !== fullName),
++    );
++  }
++
+@@ -84 +90 @@ const Home: React.FC = () => {
+-          <Link key={crypto.randomUUID()} to={`/repositories/${repository.full_name}`}>
++          <Link key={repository.full_name} to={`/repositories/${repository.full_name}`}>
+@@ -92,0 +99,10 @@ const Home: React.FC = () => {
++            <button
++              type="button"
++              onClick={(event) => {
++                event.preventDefault();
++                event.stopPropagation();
++                handleRemoveRepository(repository.full_name);
++              }}
++            >
++              <FiTrash2 size={20} />
++            </button>
+diff --git a/src/pages/Home/styles.ts b/src/pages/Home/styles.ts
+index c9492f6..c255562 100644
+--- a/src/pages/Home/styles.ts
++++ b/src/pages/Home/styles.ts
+@@ -129 +129,3 @@ export const Repositories = styled.div`
+-    svg {
++    button {
++      background: transparent;
++      border: 0;
+@@ -130,0 +133,11 @@ export const Repositories = styled.div`
++      padding: 8px;
++      line-height: 0;
++      color: #cbcbd6;
++      transition: color 0.2s;
++
++      &:hover {
++        color: #c53030;
++      }
++    }
++
++    svg {
+@@ -131,0 +145 @@ export const Repositories = styled.div`
++      margin-left: 8px;

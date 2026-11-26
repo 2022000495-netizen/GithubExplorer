@@ -1,0 +1,65 @@
+diff --git a/src/pages/Repository/index.tsx b/src/pages/Repository/index.tsx
+index 6ec6f43..77afd1d 100644
+--- a/src/pages/Repository/index.tsx
++++ b/src/pages/Repository/index.tsx
+@@ -10 +10,7 @@ import Footer from '../../components/Footer';
+-import { Header, RespositoryInfo, Issues } from './styles';
++import {
++  Header,
++  RespositoryInfo,
++  SectionTitle,
++  Issues,
++  PullRequests,
++} from './styles';
+@@ -30,0 +37,9 @@ interface Issue {
++interface PullRequest {
++  id: number;
++  title: string;
++  html_url: string;
++  created_at: string;
++  user: {
++    login: string;
++  };
++}
+@@ -35,0 +51 @@ const Repository: React.FC = () => {
++  const [pullRequests, setPullRequests] = useState<PullRequest[]>([]);
+@@ -43,0 +60,3 @@ const Repository: React.FC = () => {
++    api.get(`/repos/${repositoryName}/pulls?state=open`).then((response) => {
++      setPullRequests(response.data);
++    });
+@@ -82,0 +102 @@ const Repository: React.FC = () => {
++      <SectionTitle>Issues</SectionTitle>
+@@ -94,0 +115,16 @@ const Repository: React.FC = () => {
++      <SectionTitle>Pull Requests</SectionTitle>
++      <PullRequests>
++        {pullRequests.map((pullRequest) => (
++          <a key={pullRequest.id} href={pullRequest.html_url}>
++            <div>
++              <strong>{pullRequest.title}</strong>
++              <p>
++                {pullRequest.user.login} · aberto em{' '}
++                {new Date(pullRequest.created_at).toLocaleDateString('pt-BR')}
++              </p>
++            </div>
++            <FiChevronRight size={20} />
++          </a>
++        ))}
++      </PullRequests>
++
+diff --git a/src/pages/Repository/styles.ts b/src/pages/Repository/styles.ts
+index 6a82d80..31dd6d5 100644
+--- a/src/pages/Repository/styles.ts
++++ b/src/pages/Repository/styles.ts
+@@ -116,0 +117,6 @@ export const RespositoryInfo = styled.section`
++export const SectionTitle = styled.h2`
++  margin-top: 80px;
++  font-size: 24px;
++  color: #3d3d4d;
++`;
++
+@@ -118 +124 @@ export const Issues = styled.div`
+-  margin: 80px 0px;
++  margin: 16px 0px 80px;
+@@ -157,0 +164,2 @@ export const Issues = styled.div`
++
++export const PullRequests = styled(Issues)``;

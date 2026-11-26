@@ -1,0 +1,102 @@
+diff --git a/src/pages/Home/index.tsx b/src/pages/Home/index.tsx
+index b21a9d6..8623963 100644
+--- a/src/pages/Home/index.tsx
++++ b/src/pages/Home/index.tsx
+@@ -2 +2 @@ import React, { useState, FormEvent, useEffect } from 'react';
+-import { FiChevronRight } from 'react-icons/fi';
++import { FiChevronRight, FiTrash2 } from 'react-icons/fi';
+@@ -9 +9 @@ import Footer from '../../components/Footer';
+-import { Title, Form, Repositories, Error } from './styles';
++import { Title, Form, Repositories, RepositoryItem, Error } from './styles';
+@@ -66,0 +67,6 @@ const Home: React.FC = () => {
++  function handleRemoveRepository(fullName: string): void {
++    setRepositories(
++      repositories.filter((repository) => repository.full_name !== fullName),
++    );
++  }
++
+@@ -84,11 +90,19 @@ const Home: React.FC = () => {
+-          <Link key={crypto.randomUUID()} to={`/repositories/${repository.full_name}`}>
+-            <img
+-              src={repository.owner.avatar_url}
+-              alt={repository.owner.login}
+-            />
+-            <div>
+-              <strong>{repository.full_name}</strong>
+-              <p>{repository.description}</p>
+-            </div>
+-            <FiChevronRight size={20} />
+-          </Link>
++          <RepositoryItem key={repository.full_name}>
++            <Link to={`/repositories/${repository.full_name}`}>
++              <img
++                src={repository.owner.avatar_url}
++                alt={repository.owner.login}
++              />
++              <div>
++                <strong>{repository.full_name}</strong>
++                <p>{repository.description}</p>
++              </div>
++              <FiChevronRight size={20} />
++            </Link>
++            <button
++              type="button"
++              onClick={() => handleRemoveRepository(repository.full_name)}
++            >
++              <FiTrash2 size={20} />
++            </button>
++          </RepositoryItem>
+diff --git a/src/pages/Home/styles.ts b/src/pages/Home/styles.ts
+index c9492f6..bc405d5 100644
+--- a/src/pages/Home/styles.ts
++++ b/src/pages/Home/styles.ts
+@@ -80,0 +81,18 @@ export const Repositories = styled.div`
++`;
++
++export const RepositoryItem = styled.div`
++  background: #fff;
++  border-radius: 5px;
++  width: 100%;
++  padding: 24px;
++  display: flex;
++  align-items: center;
++  transition: transform 0.2s;
++
++  &:hover {
++    transform: translateX(10px);
++  }
++
++  & + div {
++    margin-top: 16px;
++  }
+@@ -83,6 +101 @@ export const Repositories = styled.div`
+-    background: #fff;
+-    border-radius: 5px;
+-    width: 100%;
+-    padding: 24px;
+-    display: block;
+-    text-decoration: none;
++    flex: 1;
+@@ -91,7 +104 @@ export const Repositories = styled.div`
+-    transition: transform 0.2s;
+-    &:hover {
+-      transform: translateX(10px);
+-    }
+-    & + a {
+-      margin-top: 16px;
+-    }
++    text-decoration: none;
+@@ -137,0 +145,13 @@ export const Repositories = styled.div`
++
++  button {
++    background: transparent;
++    border: 0;
++    margin-left: 16px;
++    padding: 4px;
++    color: #cbcbd6;
++    transition: color 0.2s;
++
++    &:hover {
++      color: #c53030;
++    }
++  }

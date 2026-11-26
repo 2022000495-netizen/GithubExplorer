@@ -1,0 +1,202 @@
+diff --git a/src/data/use-cases/RemoteGetRepositoryPullRequests.ts b/src/data/use-cases/RemoteGetRepositoryPullRequests.ts
+new file mode 100644
+index 0000000..733959f
+--- /dev/null
++++ b/src/data/use-cases/RemoteGetRepositoryPullRequests.ts
+@@ -0,0 +1,57 @@
++import { InvalidRepositoryError } from "@/domain/errors/InvalidRepositoryError";
++import { UnexpectedError } from "@/domain/errors/UnexpectedError";
++import { RepositoryPullRequest } from "@/domain/models/RepositoryPullRequest";
++import { GetRepositoryPullRequests } from "@/domain/use-cases/GetRepositoryPullRequests";
++import {
++  HttpClientProtocol,
++  HttpStatusCode,
++} from "../protocols/http/HttpClientProtocol";
++
++interface RemoteRepositoryPullRequests {
++  id: number;
++  title: string;
++  html_url: string;
++  created_at: string;
++  user: {
++    login: string;
++  };
++}
++export class RemoteGetRepositoryPullRequests
++  implements GetRepositoryPullRequests
++{
++  constructor(
++    private readonly url: string,
++    private readonly httpClient: HttpClientProtocol
++  ) {}
++
++  async get(
++    owner: string,
++    repositoryName: string
++  ): Promise<RepositoryPullRequest[]> {
++    const httpResult = await this.httpClient.request({
++      method: "GET",
++      url: `${this.url}/${owner}/${repositoryName}/pulls?state=open`,
++    });
++
++    switch (httpResult.statusCode) {
++      case HttpStatusCode.ok:
++        return this.adapt(httpResult.body as RemoteRepositoryPullRequests[]);
++      case HttpStatusCode.notFound:
++        throw new InvalidRepositoryError();
++      default:
++        throw new UnexpectedError();
++    }
++  }
++
++  private adapt(
++    httpResponse: RemoteRepositoryPullRequests[]
++  ): RepositoryPullRequest[] {
++    return httpResponse.map((response) => ({
++      id: response.id,
++      title: response.title,
++      createdBy: response.user.login,
++      createdAt: response.created_at,
++      linkTo: response.html_url,
++    }));
++  }
++}
+diff --git a/src/domain/models/RepositoryPullRequest.ts b/src/domain/models/RepositoryPullRequest.ts
+new file mode 100644
+index 0000000..9ce4c17
+--- /dev/null
++++ b/src/domain/models/RepositoryPullRequest.ts
+@@ -0,0 +1,7 @@
++export interface RepositoryPullRequest {
++  id: number
++  title: string
++  linkTo: string
++  createdBy: string
++  createdAt: string
++}
+diff --git a/src/domain/use-cases/GetRepositoryPullRequests.ts b/src/domain/use-cases/GetRepositoryPullRequests.ts
+new file mode 100644
+index 0000000..3d634dd
+--- /dev/null
++++ b/src/domain/use-cases/GetRepositoryPullRequests.ts
+@@ -0,0 +1,5 @@
++import { RepositoryPullRequest } from '../models/RepositoryPullRequest'
++
++export interface GetRepositoryPullRequests {
++  get(owner: string, repositoryName: string): Promise<RepositoryPullRequest[]>
++}
+diff --git a/src/main/factories/use-cases/remote-get-repository-pull-requests-factory.ts b/src/main/factories/use-cases/remote-get-repository-pull-requests-factory.ts
+new file mode 100644
+index 0000000..d1f24b1
+--- /dev/null
++++ b/src/main/factories/use-cases/remote-get-repository-pull-requests-factory.ts
+@@ -0,0 +1,12 @@
++import { RemoteGetRepositoryPullRequests } from "@/data/use-cases/RemoteGetRepositoryPullRequests";
++import { GetRepositoryPullRequests } from "@/domain/use-cases/GetRepositoryPullRequests";
++import { makeApiUrl } from "../http/api-url-factory";
++import { makeAxiosHttpClientAdapter } from "../http/axios-http-client-adapter-factory";
++
++export const makeRemoteGetRepositoryPullRequests =
++  (): GetRepositoryPullRequests => {
++    return new RemoteGetRepositoryPullRequests(
++      makeApiUrl("repos"),
++      makeAxiosHttpClientAdapter()
++    );
++  };
+diff --git a/src/main/factories/views/repository-details-factory.tsx b/src/main/factories/views/repository-details-factory.tsx
+index f852086..e156f33 100644
+--- a/src/main/factories/views/repository-details-factory.tsx
++++ b/src/main/factories/views/repository-details-factory.tsx
+@@ -4,0 +5 @@ import { makeRemoteGetRepositoryIssues } from "../use-cases/remote-get-repositor
++import { makeRemoteGetRepositoryPullRequests } from "../use-cases/remote-get-repository-pull-requests-factory";
+@@ -10,0 +12 @@ export const makeRepositoryDetails: React.FC = () => {
++      getRepositoryPullRequests={makeRemoteGetRepositoryPullRequests()}
+diff --git a/src/presentation/pages/RepositoryDetails/index.tsx b/src/presentation/pages/RepositoryDetails/index.tsx
+index 0fb2c3d..3729c2a 100644
+--- a/src/presentation/pages/RepositoryDetails/index.tsx
++++ b/src/presentation/pages/RepositoryDetails/index.tsx
+@@ -7 +7,7 @@ import Footer from "@/presentation/components/Footer";
+-import { Header, Issues, RespositoryInfo } from "./styles";
++import {
++  Header,
++  Issues,
++  PullRequests,
++  RespositoryInfo,
++  SectionTitle,
++} from "./styles";
+@@ -11,0 +18,2 @@ import { RepositoryIssue } from "@/domain/models/RepositoryIssue";
++import { GetRepositoryPullRequests } from "@/domain/use-cases/GetRepositoryPullRequests";
++import { RepositoryPullRequest } from "@/domain/models/RepositoryPullRequest";
+@@ -25,0 +34 @@ interface Props {
++  getRepositoryPullRequests: GetRepositoryPullRequests;
+@@ -30,0 +40 @@ const RepositoryDetailsPage: React.FC<Props> = ({
++  getRepositoryPullRequests,
+@@ -37,0 +48,3 @@ const RepositoryDetailsPage: React.FC<Props> = ({
++  const [pullRequests, setPullRequests] = useState<RepositoryPullRequest[]>(
++    []
++  );
+@@ -57 +70,16 @@ const RepositoryDetailsPage: React.FC<Props> = ({
+-  }, [getRepositoryDetails, getRepositoryIssues, owner, repositoryName]);
++
++    getRepositoryPullRequests
++      .get(owner, repositoryName)
++      .then((pullRequests) => {
++        setPullRequests(pullRequests);
++      })
++      .catch(() => {
++        setPullRequests([]);
++      });
++  }, [
++    getRepositoryDetails,
++    getRepositoryIssues,
++    getRepositoryPullRequests,
++    owner,
++    repositoryName,
++  ]);
+@@ -95,0 +124 @@ const RepositoryDetailsPage: React.FC<Props> = ({
++      {issues.length > 0 && <SectionTitle>Issues</SectionTitle>}
+@@ -107,0 +137,16 @@ const RepositoryDetailsPage: React.FC<Props> = ({
++      {pullRequests.length > 0 && <SectionTitle>Pull Requests</SectionTitle>}
++      <PullRequests>
++        {pullRequests.map((pullRequest) => (
++          <a key={pullRequest.id} href={pullRequest.linkTo}>
++            <div>
++              <strong>{pullRequest.title}</strong>
++              <p>{pullRequest.createdBy}</p>
++              <span>
++                {new Date(pullRequest.createdAt).toLocaleDateString()}
++              </span>
++            </div>
++            <FiChevronRight size={20} />
++          </a>
++        ))}
++      </PullRequests>
++
+diff --git a/src/presentation/pages/RepositoryDetails/styles.ts b/src/presentation/pages/RepositoryDetails/styles.ts
+index 89d0a99..3e36f6d 100644
+--- a/src/presentation/pages/RepositoryDetails/styles.ts
++++ b/src/presentation/pages/RepositoryDetails/styles.ts
+@@ -116,0 +117,6 @@ export const RespositoryInfo = styled.section`
++export const SectionTitle = styled.h2`
++  margin-top: 80px;
++  font-size: 24px;
++  color: #3d3d4d;
++`;
++
+@@ -118 +124 @@ export const Issues = styled.div`
+-  margin: 80px 0px;
++  margin: 24px 0px 80px;
+@@ -157,0 +164,13 @@ export const Issues = styled.div`
++
++export const PullRequests = styled(Issues)`
++  a {
++    div {
++      span {
++        display: block;
++        font-size: 14px;
++        color: #a8a8b3;
++        margin-top: 4px;
++      }
++    }
++  }
++`;

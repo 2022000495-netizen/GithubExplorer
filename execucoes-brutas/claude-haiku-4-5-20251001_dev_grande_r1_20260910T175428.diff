@@ -1,0 +1,145 @@
+diff --git a/PULL_REQUESTS_FEATURE.md b/PULL_REQUESTS_FEATURE.md
+new file mode 100644
+index 0000000..7f91d52
+--- /dev/null
++++ b/PULL_REQUESTS_FEATURE.md
+@@ -0,0 +1,139 @@
++# Feature: Pull Requests Listing
++
++## Descrição
++Adicionada a funcionalidade de listagem de Pull Requests na página de detalhes de um repositório, de forma análoga à listagem de issues já existente.
++
++## Arquivos Criados
++
++### Modelos de Dados
++- **`src/domain/models/RepositoryPullRequest.ts`**: Interface que define a estrutura de um Pull Request com campos: `id`, `title`, `linkTo`, `createdBy`, `createdAt`
++
++### Use Cases
++- **`src/domain/use-cases/GetRepositoryPullRequests.ts`**: Interface do use case que define o contrato para buscar PRs
++
++### Implementações
++- **`src/data/use-cases/RemoteGetRepositoryPullRequests.ts`**: Implementação concreta que busca os PRs da API pública do GitHub
++  - Endpoint: `GET /repos/{owner}/{repository}/pulls`
++  - Mapeia a resposta da API para o modelo de domínio
++  - Trata erros (InvalidRepositoryError, UnexpectedError)
++
++### Testes
++- **`src/data/use-cases/RemoteGetRepositoryPullRequests.test.ts`**: Suite de testes com 5 testes, 100% de cobertura
++  - Testa sucesso na busca de PRs
++  - Testa erro 404 para repositório não encontrado
++  - Testa erro de servidor
++  - Testa chamada correta ao endpoint
++  - Testa retorno vazio quando não há PRs
++
++### Factory (Injeção de Dependência)
++- **`src/main/factories/use-cases/remote-get-repository-pull-requests-factory.ts`**: Factory para criar a instância do use case
++
++### Apresentação
++- **`src/presentation/pages/RepositoryDetails/index.tsx`**: 
++  - Adicionada prop `getRepositoryPullRequests`
++  - Adicionado hook `useEffect` para buscar PRs
++  - Adicionada seção de renderização dos PRs com título, autor e data de criação
++
++- **`src/presentation/pages/RepositoryDetails/styles.ts`**: 
++  - Novo styled component `PullRequests` para estilizar a seção
++  - Mantém consistência visual com a seção de Issues
++  - Exibe data formatada do PR
++
++### View Factory
++- **`src/main/factories/views/repository-details-factory.tsx`**: 
++  - Atualizada para injetar o use case de PRs na página
++
++## Características Implementadas
++
++✅ **API Integration**
++- Consome a API pública do GitHub: `GET /repos/{owner}/{repository}/pulls`
++- Filtra PRs abertos (default da API)
++- Mapeia campos: id, title, html_url, user.login, created_at
++
++✅ **Apresentação**
++- Seção com título "Pull Requests"
++- Cada PR exibe:
++  - Título do PR
++  - Autor (login do usuário)
++  - Data de criação (formatada com `toLocaleDateString()`)
++  - Link direto para o PR no GitHub
++
++✅ **Design**
++- Estilos consistentes com a seção de Issues
++- Cards com fundo branco, bordas arredondadas
++- Ícone de seta à direita para indicar clicabilidade
++- Efeito hover com translateX(10px)
++- Espaçamento de 80px entre seções
++- Data com tamanho de fonte menor (14px) em cor mais clara
++
++✅ **Testes**
++- 5 testes unitários com 100% de cobertura
++- Todos os testes passando
++
++✅ **Arquitetura**
++- Segue o padrão Clean Architecture do projeto
++- Separação clara entre domínio, dados e apresentação
++- Injeção de dependência via factories
++- Tratamento de erros apropriado
++
++## Como Testar
++
++### 1. Testes Automatizados
++```bash
++npm test
++```
++
++### 2. Testes Manuais na Aplicação
++1. Execute o servidor de desenvolvimento: `npm run dev`
++2. Acesse http://localhost:5174
++3. Busque por um repositório (ex: "facebook/react")
++4. Na página de detalhes, você verá:
++   - Seção "Issues" com os issues abertos
++   - Seção "Pull Requests" com os PRs abertos
++
++### 3. Verificar no Browser
++- Os PRs devem ser exibidos com título, autor e data
++- Ao clicar em um PR, deve abrir a página do PR no GitHub
++- Os estilos devem ser consistentes com os issues
++
++## Padrão Visual
++
++```
++┌─────────────────────────────────┐
++│ Pull Requests                   │
++├─────────────────────────────────┤
++│ ┌─────────────────────────────┐ │
++│ │ Title of the Pull Request   │ │
++│ │ author · 9/10/2024      → │ │
++│ └─────────────────────────────┘ │
++│                                 │
++│ ┌─────────────────────────────┐ │
++│ │ Another PR Title            │ │
++│ │ another_author · 9/9/2024 → │ │
++│ └─────────────────────────────┘ │
++└─────────────────────────────────┘
++```
++
++## Estrutura da Resposta da API
++
++A API do GitHub retorna uma array de objetos com:
++```json
++{
++  "id": 1,
++  "title": "Add feature X",
++  "html_url": "https://github.com/owner/repo/pull/1",
++  "user": {
++    "login": "username"
++  },
++  "created_at": "2024-01-01T10:00:00Z"
++}
++```
++
++## Build e Deploy
++
++O projeto compila sem erros:
++```bash
++npm run build
++```
++
++Todos os arquivos TypeScript e React foram validados com sucesso.

@@ -1,0 +1,85 @@
+diff --git a/src/pages/Repository/index.tsx b/src/pages/Repository/index.tsx
+index 6ec6f43..49dd2dc 100644
+--- a/src/pages/Repository/index.tsx
++++ b/src/pages/Repository/index.tsx
+@@ -10 +10 @@ import Footer from '../../components/Footer';
+-import { Header, RespositoryInfo, Issues } from './styles';
++import { Header, RespositoryInfo, Issues, LoadMoreButton } from './styles';
+@@ -31,0 +32,2 @@ interface Issue {
++const ISSUES_PER_PAGE = 30;
++
+@@ -35,0 +38,3 @@ const Repository: React.FC = () => {
++  const [issuesPage, setIssuesPage] = useState(1);
++  const [hasMoreIssues, setHasMoreIssues] = useState(false);
++  const [loadingMoreIssues, setLoadingMoreIssues] = useState(false);
+@@ -41,3 +46,9 @@ const Repository: React.FC = () => {
+-    api.get(`/repos/${repositoryName}/issues`).then((response) => {
+-      setIssues(response.data);
+-    });
++    api
++      .get<Issue[]>(`/repos/${repositoryName}/issues`, {
++        params: { page: 1, per_page: ISSUES_PER_PAGE },
++      })
++      .then((response) => {
++        setIssues(response.data);
++        setIssuesPage(1);
++        setHasMoreIssues(response.data.length === ISSUES_PER_PAGE);
++      });
+@@ -45,0 +57,19 @@ const Repository: React.FC = () => {
++  async function handleLoadMoreIssues(): Promise<void> {
++    setLoadingMoreIssues(true);
++    try {
++      const nextPage = issuesPage + 1;
++      const response = await api.get<Issue[]>(
++        `/repos/${repositoryName}/issues`,
++        {
++          params: { page: nextPage, per_page: ISSUES_PER_PAGE },
++        },
++      );
++
++      setIssues([...issues, ...response.data]);
++      setIssuesPage(nextPage);
++      setHasMoreIssues(response.data.length === ISSUES_PER_PAGE);
++    } finally {
++      setLoadingMoreIssues(false);
++    }
++  }
++
+@@ -92,0 +123,9 @@ const Repository: React.FC = () => {
++        {hasMoreIssues && (
++          <LoadMoreButton
++            type="button"
++            onClick={handleLoadMoreIssues}
++            disabled={loadingMoreIssues}
++          >
++            {loadingMoreIssues ? 'Carregando...' : 'Carregar mais'}
++          </LoadMoreButton>
++        )}
+diff --git a/src/pages/Repository/styles.ts b/src/pages/Repository/styles.ts
+index 6a82d80..16ff86c 100644
+--- a/src/pages/Repository/styles.ts
++++ b/src/pages/Repository/styles.ts
+@@ -1,0 +2 @@ import styled from 'styled-components';
++import { shade } from 'polished';
+@@ -157,0 +159,21 @@ export const Issues = styled.div`
++
++export const LoadMoreButton = styled.button`
++  width: 100%;
++  margin-top: 16px;
++  padding: 16px 24px;
++  background-color: #04d361;
++  border: 0;
++  border-radius: 5px;
++  color: #fff;
++  font-weight: bold;
++  transition: background-color 0.2s;
++
++  &:hover {
++    background-color: ${shade(0.2, '#04d361')};
++  }
++
++  &:disabled {
++    background-color: ${shade(0.2, '#04d361')};
++    cursor: not-allowed;
++  }
++`;

@@ -1,0 +1,105 @@
+diff --git a/src/data/use-cases/RemoteGetRepositoryIssues.ts b/src/data/use-cases/RemoteGetRepositoryIssues.ts
+index 942aa2e..d7f3cd9 100644
+--- a/src/data/use-cases/RemoteGetRepositoryIssues.ts
++++ b/src/data/use-cases/RemoteGetRepositoryIssues.ts
+@@ -18,0 +19,2 @@ export class RemoteGetRepositoryIssues implements GetRepositoryIssues {
++  private readonly perPage = 30;
++
+@@ -27 +29 @@ export class RemoteGetRepositoryIssues implements GetRepositoryIssues {
+-      url: `${this.url}/${owner}/${repositoryName}/issues`,
++      url: `${this.url}/${owner}/${repositoryName}/issues?page=1&per_page=${this.perPage}`,
+@@ -39,0 +42,18 @@ export class RemoteGetRepositoryIssues implements GetRepositoryIssues {
++  async getPage(owner: string, repositoryName: string, page: number): Promise<{ issues: RepositoryIssue[]; hasMore: boolean }> {
++    const httpResult = await this.httpClient.request({
++      method: "GET",
++      url: `${this.url}/${owner}/${repositoryName}/issues?page=${page}&per_page=${this.perPage}`,
++    });
++
++    switch (httpResult.statusCode) {
++      case HttpStatusCode.ok:
++        const issues = this.adapt(httpResult.body as RemoteRepositoryIssues[]);
++        const hasMore = issues.length === this.perPage;
++        return { issues, hasMore };
++      case HttpStatusCode.notFound:
++        throw new InvalidRepositoryError();
++      default:
++        throw new UnexpectedError();
++    }
++  }
++
+diff --git a/src/domain/use-cases/GetRepositoryIssues.ts b/src/domain/use-cases/GetRepositoryIssues.ts
+index 7c16fe5..359e91d 100644
+--- a/src/domain/use-cases/GetRepositoryIssues.ts
++++ b/src/domain/use-cases/GetRepositoryIssues.ts
+@@ -4,0 +5 @@ export interface GetRepositoryIssues {
++  getPage(owner: string, repositoryName: string, page: number): Promise<{ issues: RepositoryIssue[]; hasMore: boolean }>
+diff --git a/src/presentation/pages/RepositoryDetails/index.tsx b/src/presentation/pages/RepositoryDetails/index.tsx
+index 0fb2c3d..28ebfca 100644
+--- a/src/presentation/pages/RepositoryDetails/index.tsx
++++ b/src/presentation/pages/RepositoryDetails/index.tsx
+@@ -7 +7 @@ import Footer from "@/presentation/components/Footer";
+-import { Header, Issues, RespositoryInfo } from "./styles";
++import { Header, Issues, RespositoryInfo, LoadMoreButton } from "./styles";
+@@ -37,0 +38,3 @@ const RepositoryDetailsPage: React.FC<Props> = ({
++  const [currentPage, setCurrentPage] = useState(1);
++  const [hasMoreIssues, setHasMoreIssues] = useState(true);
++  const [isLoadingMore, setIsLoadingMore] = useState(false);
+@@ -52,0 +56,2 @@ const RepositoryDetailsPage: React.FC<Props> = ({
++        setCurrentPage(1);
++        setHasMoreIssues(issues.length > 0);
+@@ -58,0 +64,15 @@ const RepositoryDetailsPage: React.FC<Props> = ({
++  const handleLoadMore = async () => {
++    setIsLoadingMore(true);
++    try {
++      const nextPage = currentPage + 1;
++      const result = await getRepositoryIssues.getPage(owner, repositoryName, nextPage);
++      setIssues((prev) => [...prev, ...result.issues]);
++      setCurrentPage(nextPage);
++      setHasMoreIssues(result.hasMore);
++    } catch {
++      setHasMoreIssues(false);
++    } finally {
++      setIsLoadingMore(false);
++    }
++  };
++
+@@ -107,0 +128,9 @@ const RepositoryDetailsPage: React.FC<Props> = ({
++      {issues.length > 0 && (
++        <LoadMoreButton
++          onClick={handleLoadMore}
++          disabled={!hasMoreIssues || isLoadingMore}
++        >
++          {isLoadingMore ? "Carregando..." : "Carregar mais"}
++        </LoadMoreButton>
++      )}
++
+diff --git a/src/presentation/pages/RepositoryDetails/styles.ts b/src/presentation/pages/RepositoryDetails/styles.ts
+index 89d0a99..8cda10d 100644
+--- a/src/presentation/pages/RepositoryDetails/styles.ts
++++ b/src/presentation/pages/RepositoryDetails/styles.ts
+@@ -157,0 +158,25 @@ export const Issues = styled.div`
++
++export const LoadMoreButton = styled.button`
++  background: #3294f8;
++  border: 0;
++  border-radius: 5px;
++  width: 100%;
++  max-width: 700px;
++  padding: 16px 24px;
++  color: #fff;
++  font-size: 16px;
++  font-weight: bold;
++  margin: 16px 0 80px;
++  transition: background-color 0.2s;
++  cursor: pointer;
++
++  &:hover:not(:disabled) {
++    background: #2980d9;
++  }
++
++  &:disabled {
++    background: #cbcbd6;
++    cursor: not-allowed;
++    opacity: 0.6;
++  }
++`;
